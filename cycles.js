@@ -20,11 +20,26 @@ library.using([
   "basic-styles",
   "make-request",
   "bridge-module",
-  "./clock-tick"],
-  function (WebSite, BrowserBridge, element, basicStyles, makeRequest, bridgeModule, clockTick) {
+  "./clock-tick",
+  "a-wild-universe-appeared"],
+  function (WebSite, BrowserBridge, element, basicStyles, makeRequest, bridgeModule, clockTick, aWildUniverseAppeared) {
     var site = new WebSite()
     var baseBridge = new BrowserBridge()
     basicStyles.addTo(baseBridge)
+
+
+    var universe = aWildUniverseAppeared(
+      "clock",{
+      "clockTick": clockTick})
+
+    universe.persistToS3({
+      key: process.env.AWS_ACCESS_KEY_ID,
+      secret: process.env.AWS_SECRET_ACCESS_KEY,
+      bucket: process.env.S3_BUCKET
+    })
+    universe.load(function() {
+      // log has been played back
+    })
 
     // ---
 
@@ -45,6 +60,7 @@ library.using([
       "/tick",
       function(request, response) {
         var tick = clockTick()
+        universe.do("clockTick")
         response.send({
           tick: tick})
       })

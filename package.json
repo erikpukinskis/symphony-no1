@@ -6,6 +6,7 @@
     "browser-bridge": "*",
     "basic-styles": "*",
     "make-request": "*",
-    "bridge-module": "*"
+    "bridge-module": "*",
+    "a-wild-universe-appeared": "*"
   }
 }
