@@ -10,5 +10,8 @@
     "a-wild-universe-appeared": "*",
     "creature": "*",
     "add-html": "*"
+  },
+  "scripts": {
+    "start": "node cycles"
   }
 }

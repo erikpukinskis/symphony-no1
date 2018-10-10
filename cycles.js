@@ -87,8 +87,13 @@ library.using([
       "Press me",{
       "onclick": nextTick.evalable()})
 
+    var body = element.style(
+      "body",{
+      "zoom": "2.2"})
+
     baseBridge.addToHead(
       element.stylesheet([
+        body,
         gem]))
 
     var page = [
@@ -104,7 +109,7 @@ library.using([
       "/",
       baseBridge.requestHandler(page))
 
-    site.start(2043)
+    site.start(process.env.PORT || 2043)
   })
 
 // e.g. press the button
