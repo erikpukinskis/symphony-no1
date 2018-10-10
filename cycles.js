@@ -14,6 +14,7 @@ var library = require("module-library")(require)
 
 
 library.using([
+  library.ref(),
   "web-site",
   "browser-bridge",
   "web-element",
@@ -23,7 +24,7 @@ library.using([
   "./clock-tick",
   "a-wild-universe-appeared",
   "./gem"],
-  function (WebSite, BrowserBridge, element, basicStyles, makeRequest, bridgeModule, clockTick, aWildUniverseAppeared, gem) {
+  function (lib, WebSite, BrowserBridge, element, basicStyles, makeRequest, bridgeModule, clockTick, aWildUniverseAppeared, gem) {
     var site = new WebSite()
     var baseBridge = new BrowserBridge()
     basicStyles.addTo(baseBridge)
@@ -44,15 +45,28 @@ library.using([
 
     // ---
 
+    var grabGem = gem.defineGrabOn(baseBridge)
+
     var nextTick = baseBridge.defineFunction([
-      makeRequest.defineOn(baseBridge)],
-      function(makeRequest) {
+      makeRequest.defineOn(baseBridge),
+      grabGem.asBinding(),
+      bridgeModule(lib, "web-element", baseBridge),
+      bridgeModule(lib, "add-html", baseBridge)],
+      function(makeRequest, grabGem, element, addHtml) {
+
+        var tickGem = element(".gem", element(".color"))
+
+        tickGem.onclick(
+          grabGem.withArgs(
+            tickGem.assignId())
+          .evalable())
 
         makeRequest({
           method: "post",
           path: "/tick"},
           function(clock) {
-            document.querySelector(".clock").innerHTML = "It is "+clock.tick+" o'clock"})
+            document.querySelector(".clock").innerHTML = "It is "+clock.tick+" o'clock"
+            addHtml(tickGem.html())})
 
       })
 
@@ -80,7 +94,7 @@ library.using([
     var page = [
       button,
       element(".clock"),
-      gem(baseBridge),
+      gem(grabGem),
       gem.pouch()]
 
     gem.prepareSite(site)

@@ -35,8 +35,8 @@ module.exports = library.export(
         },
       }),
       element(".color"),
-      function(bridge) {
-        this.onclick(defineGrabOn(bridge).evalable())
+      function(grabBinding) {
+        this.onclick(grabBinding.withArgs(this.assignId()).evalable())
       })
 
     var pouches = {}
@@ -79,18 +79,21 @@ module.exports = library.export(
       site.see("gem", true)
     }
 
-    function defineGrabOn(bridge) {
+    gem.defineGrabOn = function(bridge) {
 
       var functionDefinition = bridge.remember("gem")
 
       if (!functionDefinition) {
         functionDefinition = bridge.defineFunction([
           bridgeModule(lib, "make-request", bridge)],
-          function grabGem(makeRequest) {
+          function grabGem(makeRequest, id) {
             makeRequest({
               method: "post",
               path: "gems/grabbed",
             },function(data) {
+              var gem = document.getElementById(id)
+              gem.remove()
+
               document.querySelector(".pouch").innerText = "You are called "+data.meId+" and you have "+data.gemCount+" points"
             })
 
