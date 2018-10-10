@@ -23,25 +23,14 @@ library.using([
   "bridge-module",
   "./clock-tick",
   "a-wild-universe-appeared",
-  "./gem"],
-  function (lib, WebSite, BrowserBridge, element, basicStyles, makeRequest, bridgeModule, clockTick, aWildUniverseAppeared, gem) {
+  "./gem",
+  "./boot-universe"],
+  function (lib, WebSite, BrowserBridge, element, basicStyles, makeRequest, bridgeModule, clockTick, aWildUniverseAppeared, gem, bootUniverse) {
     var site = new WebSite()
     var baseBridge = new BrowserBridge()
     basicStyles.addTo(baseBridge)
 
-
-    var universe = aWildUniverseAppeared(
-      "clock",{
-      "clockTick": clockTick})
-
-    universe.persistToS3({
-      key: process.env.AWS_ACCESS_KEY_ID,
-      secret: process.env.AWS_SECRET_ACCESS_KEY,
-      bucket: process.env.S3_BUCKET
-    })
-    universe.load(function() {
-      // log has been played back
-    })
+    var universe = bootUniverse(site)
 
     // ---
 
@@ -58,15 +47,17 @@ library.using([
 
         tickGem.onclick(
           grabGem.withArgs(
-            tickGem.assignId())
-          .evalable())
+            tickGem.assignId()).evalable())
 
         makeRequest({
           method: "post",
           path: "/tick"},
-          function(clock) {
-            document.querySelector(".clock").innerHTML = "It is "+clock.tick+" o'clock"
-            addHtml(tickGem.html())})
+          addGem)
+
+        function addGem(clock) {
+          document.querySelector(".clock").innerHTML = "It is "+clock.tick+" o'clock"
+          addHtml(tickGem.html())
+        }
 
       })
 
@@ -97,12 +88,16 @@ library.using([
         gem]))
 
     var page = [
+      bootUniverse.element(
+        universe,
+        baseBridge),
       button,
       element(".clock"),
       gem(grabGem),
       gem.pouch()]
 
     gem.prepareSite(site)
+
 
     site.addRoute(
       "get",
