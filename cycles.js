@@ -21,8 +21,9 @@ library.using([
   "make-request",
   "bridge-module",
   "./clock-tick",
-  "a-wild-universe-appeared"],
-  function (WebSite, BrowserBridge, element, basicStyles, makeRequest, bridgeModule, clockTick, aWildUniverseAppeared) {
+  "a-wild-universe-appeared",
+  "./gem"],
+  function (WebSite, BrowserBridge, element, basicStyles, makeRequest, bridgeModule, clockTick, aWildUniverseAppeared, gem) {
     var site = new WebSite()
     var baseBridge = new BrowserBridge()
     basicStyles.addTo(baseBridge)
@@ -51,7 +52,7 @@ library.using([
           method: "post",
           path: "/tick"},
           function(clock) {
-            console.log(clock.tick)})
+            document.querySelector(".clock").innerHTML = "It is "+clock.tick+" o'clock"})
 
       })
 
@@ -72,10 +73,22 @@ library.using([
       "Press me",{
       "onclick": nextTick.evalable()})
 
+    baseBridge.addToHead(
+      element.stylesheet([
+        gem]))
+
+    var page = [
+      button,
+      element(".clock"),
+      gem(baseBridge),
+      gem.pouch()]
+
+    gem.prepareSite(site)
+
     site.addRoute(
       "get",
       "/",
-      baseBridge.requestHandler(button))
+      baseBridge.requestHandler(page))
 
     site.start(2043)
   })
