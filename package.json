@@ -1,0 +1,11 @@
+{
+  "dependencies": {
+    "module-library": "*",
+    "web-site": "*",
+    "web-element": "*",
+    "browser-bridge": "*",
+    "basic-styles": "*",
+    "make-request": "*",
+    "bridge-module": "*"
+  }
+}
