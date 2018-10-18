@@ -41,7 +41,7 @@ library.using([
       grabGem.asBinding(),
       bridgeModule(lib, "web-element", baseBridge),
       bridgeModule(lib, "add-html", baseBridge)],
-      function(makeRequest, grabGem, element, addHtml) {
+      function nextTick(makeRequest, grabGem, element, addHtml) {
 
         var tickGem = element(".gem", element(".color"))
 
@@ -93,6 +93,7 @@ library.using([
         baseBridge),
       button,
       element(".clock"),
+      element(".timeline"),
       gem(grabGem),
       gem.pouch()]
 
@@ -118,6 +119,29 @@ library.using([
 // cycles feed the lists
 
 // if I remove items, they get more remote, but also after a time, I will get offered to break down the item into smaller steps
+
+// body cycle
+//   Face
+//   Crest
+//   Neck
+//   Shoulders
+//   Back
+//   Tail
+//   Right wing
+//   Right wing shadow
+//   Right leg
+//   Right leg shin
+//   Right claw
+//   Right talon
+//   Left claw
+//   Left talon
+//   Left shin
+//   Left leg
+//   Belly
+//   Left wing shadow
+//   Left wing
+//   Jaw
+//   Beak
 
 
 

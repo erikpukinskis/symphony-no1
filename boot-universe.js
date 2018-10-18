@@ -28,25 +28,96 @@ module.exports = library.export(
         "get",
         "/universe",
         function(request, response) {
-          response.json({
-            "baseLog": universe.source()})
+          response.send(universe.source())
         })
 
       return universe}
 
-    bootUniverse.element = function(universe, bridge) {
-      return element(
-        ".universe",
-        element.style({
-          " .nugget": {
-            "background": "black",
-            "width": "30px",
-            "height": "30px",
-          }
-        }),
-        element(".nugget"))
-    }
+    var universeTemplate = element.template(
+      ".universe",
+      element.style({
+        " .nugget": {
+          "background": "black",
+          "width": "20px",
+          "height": "20px",
+          "margin": "20px 5px",
+          "display": "inline-block",
+          "vertical-align": "middle",
+        },
 
-    bootUniverse.__booty = "yup"
+        " .details": {
+          "display": "inline-block",
+          "vertical-align": "middle",
+        },
+
+      }),
+      element(
+        ".nugget"))
+
+    var timeline = element.style(
+      ".timeline",{
+        " .statement": {
+          "display": "inline-block",
+          "margin": "0 4px",
+          "background": "black",
+          "width": "5em",
+          "color": "white"}})
+
+    bootUniverse.element = function(universe, bridge) {
+      var bigBang = bridge.remember("universe/bigBang")
+
+      if (!bigBang) {
+        bridge.addToHead(
+          element.stylesheet(
+            timeline,
+            universeTemplate))
+
+        bigBang = bridge.defineFunction([
+          bridgeModule(lib, "make-request", bridge),
+          bridgeModule(lib, "./clock-tick", bridge),
+          bridgeModule(lib, "a-wild-universe-appeared", bridge),
+          bridgeModule(lib, "web-element", bridge),
+          bridgeModule(lib, "add-html", bridge)],
+          function(makeRequest, clockTick, aWildUniverseAppeared, element, addHtml) {
+            makeRequest({
+              method: "get",
+              path: "/universe"},
+              bigBang)
+
+            function bigBang(baseLog) {
+              var universe = aWildUniverseAppeared(
+                "clock-ticks",{
+                "clockTick": clockTick},
+                baseLog)
+              universe.buildLinesFromBaseLog()
+              universe.playItBack({
+                callback: addToTimeline})}
+
+            var timeline = document.querySelector(".timeline")
+
+            function addToTimeline(functionCall, args, done) {
+              var statement = element(
+                ".statement", element.raw(functionCall))
+              addHtml.inside(timeline, statement.html())
+              console.log("timeline "+functionCall)
+              setTimeout(done,
+                500)}
+          })
+
+        bridge.see(
+          "universe/bigBang",
+          bigBang)}
+
+      var el = universeTemplate(bigBang)
+
+      var play = element(
+          "button",
+          "Play it back",{
+          onclick: bigBang.evalable()})
+
+      el.addChild(element(".details", play))
+
+      return el}
+
     return bootUniverse
   })

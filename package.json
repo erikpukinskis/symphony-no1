@@ -1,15 +1,15 @@
 {
   "dependencies": {
-    "module-library": "*",
-    "web-site": "*",
-    "web-element": "*",
-    "browser-bridge": "*",
+    "a-wild-universe-appeared": "^0.39.0",
+    "add-html": "*",
     "basic-styles": "*",
-    "make-request": "*",
     "bridge-module": "*",
-    "a-wild-universe-appeared": "*",
+    "browser-bridge": "*",
     "creature": "*",
-    "add-html": "*"
+    "make-request": "*",
+    "module-library": "*",
+    "web-element": "*",
+    "web-site": "*"
   },
   "scripts": {
     "start": "node cycles"
