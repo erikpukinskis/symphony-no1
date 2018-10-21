@@ -19,7 +19,7 @@ module.exports = library.export(
 
         " .color": {
           "margin-top": "-2px",
-          "background": "red",
+          "background": "#f47",
           "width": "12px",
           "height": "12px",
           "margin-left": "3px",

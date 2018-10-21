@@ -6,7 +6,7 @@ module.exports = library.export(
   "web-element",
   "bridge-module",
   "a-wild-universe-appeared",
-  "./clock-tick"],
+  "./clock-tick.model"],
   function(lib, element, bridgeModule, aWildUniverseAppeared, clockTick) {
 
     function bootUniverse(site) {
@@ -54,14 +54,12 @@ module.exports = library.export(
       element(
         ".nugget"))
 
-    var timeline = element.style(
-      ".timeline",{
-        " .statement": {
-          "display": "inline-block",
-          "margin": "0 4px",
-          "background": "black",
-          "width": "5em",
-          "color": "white"}})
+    var statement = element.style(
+      ".statement",{
+      "display": "inline-block",
+      "margin-left": "1em",
+      "background": "black",
+      "color": "white"})
 
     bootUniverse.element = function(universe, bridge) {
       var bigBang = bridge.remember("universe/bigBang")
@@ -69,12 +67,12 @@ module.exports = library.export(
       if (!bigBang) {
         bridge.addToHead(
           element.stylesheet(
-            timeline,
+            statement,
             universeTemplate))
 
         bigBang = bridge.defineFunction([
           bridgeModule(lib, "make-request", bridge),
-          bridgeModule(lib, "./clock-tick", bridge),
+          bridgeModule(lib, "./clock-tick.model", bridge),
           bridgeModule(lib, "a-wild-universe-appeared", bridge),
           bridgeModule(lib, "web-element", bridge),
           bridgeModule(lib, "add-html", bridge)],
@@ -98,7 +96,7 @@ module.exports = library.export(
             function addToTimeline(functionCall, args, done) {
               var statement = element(
                 ".statement", element.raw(functionCall))
-              addHtml.inside(timeline, statement.html())
+              addHtml(statement.html())
               console.log("timeline "+functionCall)
               setTimeout(done,
                 500)}

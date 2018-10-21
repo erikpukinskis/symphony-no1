@@ -21,11 +21,12 @@ library.using([
   "basic-styles",
   "make-request",
   "bridge-module",
-  "./clock-tick",
+  "./clock-tick.model",
   "a-wild-universe-appeared",
-  "./gem",
-  "./boot-universe"],
-  function (lib, WebSite, BrowserBridge, element, basicStyles, makeRequest, bridgeModule, clockTick, aWildUniverseAppeared, gem, bootUniverse) {
+  "./gem.vr",
+  "./universe.vr",
+  "./song-cycle.vr"],
+  function (lib, WebSite, BrowserBridge, element, basicStyles, makeRequest, bridgeModule, clockTick, aWildUniverseAppeared, gem, bootUniverse, cycles) {
     var site = new WebSite()
     var baseBridge = new BrowserBridge()
     basicStyles.addTo(baseBridge)
@@ -87,23 +88,26 @@ library.using([
         body,
         gem]))
 
-    var page = [
-      bootUniverse.element(
-        universe,
-        baseBridge),
-      button,
-      element(".clock"),
-      element(".timeline"),
-      gem(grabGem),
-      gem.pouch()]
-
     gem.prepareSite(site)
 
+    cycles.prepareSite(site, baseBridge, universe)
 
     site.addRoute(
       "get",
       "/",
-      baseBridge.requestHandler(page))
+      function(request, response) {
+        var page = [
+          bootUniverse.element(
+            universe,
+            baseBridge),
+          button,
+          element(".clock"),
+          cycles(),
+          gem(grabGem),
+          gem.pouch()]
+
+        baseBridge.forResponse(response).send(page)
+        })
 
     site.start(process.env.PORT || 2043)
   })
