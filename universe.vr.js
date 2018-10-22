@@ -6,20 +6,22 @@ module.exports = library.export(
   "web-element",
   "bridge-module",
   "a-wild-universe-appeared",
-  "./clock-tick.model"],
-  function(lib, element, bridgeModule, aWildUniverseAppeared, clockTick) {
+  "./clock-tick.model",
+  "./song-cycle.model"],
+  function(lib, element, bridgeModule, aWildUniverseAppeared, clockTick, songCycle) {
 
     function bootUniverse(site) {
 
       var universe = aWildUniverseAppeared(
         "clock",{
-        "clockTick": clockTick})
+        "clockTick": clockTick,
+        "songCycle": songCycle})
 
       universe.persistToS3({
         key: process.env.AWS_ACCESS_KEY_ID,
         secret: process.env.AWS_SECRET_ACCESS_KEY,
-        bucket: process.env.S3_BUCKET
-      })
+        bucket: process.env.S3_BUCKET})
+
       universe.load(function() {
         // log has been played back
       })
@@ -40,7 +42,7 @@ module.exports = library.export(
           "background": "black",
           "width": "20px",
           "height": "20px",
-          "margin": "20px 5px",
+          "margin": "8px",
           "display": "inline-block",
           "vertical-align": "middle",
         },
@@ -57,7 +59,7 @@ module.exports = library.export(
     var statement = element.style(
       ".statement",{
       "display": "inline-block",
-      "margin-left": "1em",
+      "margin-left": "0.25em",
       "background": "black",
       "color": "white"})
 
@@ -75,8 +77,9 @@ module.exports = library.export(
           bridgeModule(lib, "./clock-tick.model", bridge),
           bridgeModule(lib, "a-wild-universe-appeared", bridge),
           bridgeModule(lib, "web-element", bridge),
-          bridgeModule(lib, "add-html", bridge)],
-          function(makeRequest, clockTick, aWildUniverseAppeared, element, addHtml) {
+          bridgeModule(lib, "add-html", bridge),
+          bridgeModule(lib, "./song-cycle.model", bridge)],
+          function(makeRequest, clockTick, aWildUniverseAppeared, element, addHtml, songCycle) {
             makeRequest({
               method: "get",
               path: "/universe"},
@@ -85,7 +88,8 @@ module.exports = library.export(
             function bigBang(baseLog) {
               var universe = aWildUniverseAppeared(
                 "clock-ticks",{
-                "clockTick": clockTick},
+                "clockTick": clockTick,
+                "songCycle": songCycle},
                 baseLog)
               universe.buildLinesFromBaseLog()
               universe.playItBack({

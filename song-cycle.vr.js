@@ -12,10 +12,8 @@ module.exports = library.export(
         "href": "/cycles/new"},
         "Type out new cycle")
 
-      debugger
       var names = songCycle.map(
         function(name, songs) {
-          debugger
           var el =  element(
             ".cycle",
             element.style({
@@ -29,7 +27,6 @@ module.exports = library.export(
                 ", ")))
           return el})
 
-      debugger
       return [button].concat(names)}
 
     var form = element(
@@ -65,7 +62,6 @@ module.exports = library.export(
     var universe
 
     function addCycle(name, songs) {
-      debugger
       songCycle(name, songs)
       universe.do("songCycle", name, songs)
     }
@@ -82,7 +78,6 @@ module.exports = library.export(
         "post",
         "/cycles",
         function(request, response) {
-          debugger
           var name = request.body.name
           var songs = []
 

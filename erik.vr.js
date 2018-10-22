@@ -103,7 +103,6 @@ library.using([
           button,
           element(".clock"),
           cycles(),
-          gem(grabGem),
           gem.pouch()]
 
         baseBridge.forResponse(response).send(page)

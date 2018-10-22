@@ -19,7 +19,6 @@ module.exports = library.export(
     }
 
     songCycle.map = function(callback) {
-      debugger
       var values = []
       for(var i=0; i<names.length; i++) {
         var value = callback(
