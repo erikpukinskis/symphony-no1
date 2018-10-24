@@ -26,12 +26,12 @@ library.using([
   "./gem.vr",
   "./universe.vr",
   "./song-cycle.vr"],
-  function (lib, WebSite, BrowserBridge, element, basicStyles, makeRequest, bridgeModule, clockTick, aWildUniverseAppeared, gem, bootUniverse, cycles) {
+  function (lib, WebSite, BrowserBridge, element, basicStyles, makeRequest, bridgeModule, clockTick, aWildUniverseAppeared, gem, universeVr, songCycleVr) {
     var site = new WebSite()
     var baseBridge = new BrowserBridge()
     basicStyles.addTo(baseBridge)
 
-    var universe = bootUniverse(site)
+    var universe = universeVr(site)
 
     // ---
 
@@ -90,19 +90,19 @@ library.using([
 
     gem.prepareSite(site)
 
-    cycles.prepareSite(site, baseBridge, universe)
+    songCycleVr.prepareSite(site, baseBridge, universe)
 
     site.addRoute(
       "get",
       "/",
       function(request, response) {
         var page = [
-          bootUniverse.element(
+          universeVr.element(
             universe,
             baseBridge),
           button,
           element(".clock"),
-          cycles(),
+          songCycleVr(baseBridge),
           gem.pouch()]
 
         baseBridge.forResponse(response).send(page)

@@ -1,30 +1,44 @@
 var library = require("module-library")(require)
 
 module.exports = library.export(
-  "song-cycle",
-  function() {
+  "song-cycle",[
+  "identifiable"],
+  function(identifiable) {
     var names = []
-    var songs = []
-    var indexByName = {}
+    var songSets = []
+    var ids = []
+    var indexById = {}
 
-    function songCycle(name, cycleSongs) {
-      var index = names.length
-      if (indexByName.hasOwnProperty(name)) {
-        throw new Error("already sung cycle "+name)
-      }
-      indexByName[name] = index
+    function songCycle(id, name, cycleSongs) {
+      id = identifiable.assignId(indexById, id)
+
+      console.log("heard song", name, id)
+      var index = ids.length
+      indexById[id] = index
 
       names.push(name)
-      songs.push(cycleSongs)
+      songSets.push(cycleSongs)
+      ids.push(id)
+
+      return id
     }
 
-    songCycle.map = function(callback) {
+    songCycle.mapCycles = function(callback) {
       var values = []
       for(var i=0; i<names.length; i++) {
         var value = callback(
+          ids[i],
           names[i],
-          songs[i])
+          songSets[i])
         values.push(value)}
       return values}
+
+    songCycle.mapOpenInstances = function(callback) {
+      console.log("warning: implement mapOpenInstances")
+      return []}
+
+    songCycle.songsFromCycle = function(cycleId) {
+      var i = indexById[cycleId]
+      return songSets[i]}
 
     return songCycle})

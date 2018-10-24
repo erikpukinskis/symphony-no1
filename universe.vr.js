@@ -74,11 +74,11 @@ module.exports = library.export(
 
         bigBang = bridge.defineFunction([
           bridgeModule(lib, "make-request", bridge),
-          bridgeModule(lib, "./clock-tick.model", bridge),
+          bridgeModule(lib, "clock-tick", bridge),
           bridgeModule(lib, "a-wild-universe-appeared", bridge),
           bridgeModule(lib, "web-element", bridge),
           bridgeModule(lib, "add-html", bridge),
-          bridgeModule(lib, "./song-cycle.model", bridge)],
+          bridgeModule(lib, "song-cycle", bridge)],
           function(makeRequest, clockTick, aWildUniverseAppeared, element, addHtml, songCycle) {
             makeRequest({
               method: "get",
@@ -101,9 +101,8 @@ module.exports = library.export(
               var statement = element(
                 ".statement", element.raw(functionCall))
               addHtml(statement.html())
-              console.log("timeline "+functionCall)
               setTimeout(done,
-                500)}
+                200)}
           })
 
         bridge.see(
