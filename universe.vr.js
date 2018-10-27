@@ -1,14 +1,61 @@
 var library = require("module-library")(require)
 
+library.define(
+  "assert",
+  function() {
+
+    return {
+      match: assertMatch,
+      matchCount: assertMatchCount,
+    }
+
+    function assertMatchCount(string, search, minimum) {
+      var count = 0
+      string.split("/n").forEach(function(line) {
+        if (line.match(search)) {
+          count++
+        }
+      })
+      if (count < minimum) {
+        throw new Error("Expected string "+summarize(string)+" to match "+search+" at least "+minimum+" times")
+      }
+    }
+
+    function replaceAll(string, search, replacement) {
+        return string.replace(new RegExp(search, 'g'), replacement);
+    }
+
+    function summarize(string) {
+      var summary = string.trim().slice(0,500)
+
+      summary = replaceAll(summary, /\n/,"\\n")
+
+      summary = replaceAll(summary, /\s+/, " ")
+
+      if (string.length > 100) {
+        return "<<<\n"+summary+"....\n>>>"
+      } else {
+        return "<<<"+summary+">>>"
+      }
+    }
+
+    function assertMatch(string, search) {
+      if (!string.match(search)) {
+        throw new Error("Expected string "+summarize(string)+" to match "+search)
+      }
+    }
+  })
+
 module.exports = library.export(
   "boot-universe",[
   library.ref(),
+  "assert",
   "web-element",
   "bridge-module",
   "a-wild-universe-appeared",
   "./clock-tick.model",
   "./song-cycle.model"],
-  function(lib, element, bridgeModule, aWildUniverseAppeared, clockTick, songCycle) {
+  function(lib, assert, element, bridgeModule, aWildUniverseAppeared, clockTick, songCycle) {
 
     function bootUniverse(site) {
 
@@ -25,13 +72,6 @@ module.exports = library.export(
       universe.load(function() {
         // log has been played back
       })
-
-      site.addRoute(
-        "get",
-        "/universe",
-        function(request, response) {
-          response.send(universe.source())
-        })
 
       return universe}
 
@@ -63,51 +103,93 @@ module.exports = library.export(
       "background": "black",
       "color": "white"})
 
-    bootUniverse.element = function(universe, bridge) {
-      var bigBang = bridge.remember("universe/bigBang")
+    function prepareBridge(bridge, universe) {
 
-      if (!bigBang) {
-        bridge.addToHead(
-          element.stylesheet(
-            statement,
-            universeTemplate))
+      debugger
 
-        bigBang = bridge.defineFunction([
-          bridgeModule(lib, "make-request", bridge),
-          bridgeModule(lib, "clock-tick", bridge),
-          bridgeModule(lib, "a-wild-universe-appeared", bridge),
-          bridgeModule(lib, "web-element", bridge),
-          bridgeModule(lib, "add-html", bridge),
-          bridgeModule(lib, "song-cycle", bridge)],
-          function(makeRequest, clockTick, aWildUniverseAppeared, element, addHtml, songCycle) {
-            makeRequest({
-              method: "get",
-              path: "/universe"},
-              bigBang)
+      var singleton = bridge.defineSingleton(
+        "universe",[
+        bridgeModule(
+          lib,
+          "a-wild-universe-appeared",
+          bridge),
+        bridgeModule(
+          lib,
+          "clock-tick",
+          bridge),
+        bridgeModule(
+          lib,
+          "song-cycle",
+          bridge),
+        universe.builder()],
+        function(aWildUniverseAppeared, clockTick, songCycle, baseLog) {
+          var universe = aWildUniverseAppeared(
+            "clock-ticks",{
+            "clockTick": clockTick,
+            "songCycle": songCycle},
+            baseLog)
 
-            function bigBang(baseLog) {
-              var universe = aWildUniverseAppeared(
-                "clock-ticks",{
-                "clockTick": clockTick,
-                "songCycle": songCycle},
-                baseLog)
-              universe.buildLinesFromBaseLog()
-              universe.playItBack({
-                callback: addToTimeline})}
+          universe.reset = function() {
+            clockTick.reset()
+            songCycle.reset()
+          }
 
-            var timeline = document.querySelector(".timeline")
+          universe.buildLinesFromBaseLog()
 
-            function addToTimeline(functionCall, args, done) {
-              var statement = element(
-                ".statement", element.raw(functionCall))
-              addHtml(statement.html())
-              setTimeout(done,
-                200)}
-          })
+          universe.playItBack()
 
-        bridge.see(
-          "universe/bigBang",
-          bigBang)}
+          return universe
+        })
+
+
+      assert.matchCount(bridge.script(), /a-wild-universe/, 3)
+
+      debugger
+      return singleton
+    }
+
+    bootUniverse.element = function(bridge, universe) {
+
+      var universeBinding = prepareBridge(bridge, universe)
+
+      bridge.addToHead(
+        element.stylesheet(
+          statement,
+          universeTemplate))
+
+
+      var bigBang = bridge.defineFunction([
+        bridgeModule(
+          lib,
+          "web-element",
+          bridge),
+        bridgeModule(
+          lib,
+          "add-html",
+          bridge),
+        universeBinding],
+        function(element, addHtml, universe) {
+
+          universe.reset()
+
+          universe.markAsUnplayed()
+
+          universe.playItBack({
+            callback: addToTimeline})
+
+          var timeline = document.querySelector(".timeline")
+
+          function addToTimeline(functionCall, args, done) {
+            var statement = element(
+              ".statement",
+              element.raw(
+                functionCall))
+            addHtml.after(
+              ".playhead",
+              statement.html())
+            setTimeout(
+              done,
+              200)}})
 
       var el = universeTemplate(bigBang)
 

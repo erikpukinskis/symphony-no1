@@ -33,8 +33,6 @@ library.using([
 
     var universe = universeVr(site)
 
-    // ---
-
     var grabGem = gem.defineGrabOn(baseBridge)
 
     var nextTick = baseBridge.defineFunction([
@@ -57,7 +55,10 @@ library.using([
 
         function addGem(clock) {
           document.querySelector(".clock").innerHTML = "It is "+clock.tick+" o'clock"
-          addHtml(tickGem.html())
+          debugger
+          addHtml.after(
+            ".playhead",
+            tickGem.html())
         }
 
       })
@@ -96,17 +97,26 @@ library.using([
       "get",
       "/",
       function(request, response) {
+        var bridge = baseBridge.forResponse(response)
+
         var page = [
           universeVr.element(
-            universe,
-            baseBridge),
+            bridge,
+            universe),
           button,
+          element(
+            ".playhead",
+            element.style({
+              "height": "0.5px",
+              "background-color": "#aa85f2",
+              "margin": "0.5em -0.25em"})),
           element(".clock"),
-          songCycleVr(baseBridge),
-          gem.pouch()]
+          gem.pouch(),
+          songCycleVr(bridge)]
 
-        baseBridge.forResponse(response).send(page)
-        })
+        debugger
+        bridge.send(
+          page)})
 
     site.start(process.env.PORT || 2043)
   })

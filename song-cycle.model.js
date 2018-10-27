@@ -4,10 +4,19 @@ module.exports = library.export(
   "song-cycle",[
   "identifiable"],
   function(identifiable) {
-    var names = []
-    var songSets = []
-    var ids = []
-    var indexById = {}
+    var names
+    var songSets
+    var ids
+    var indexById
+
+    songCycle.reset = function () {
+      names = []
+      songSets = []
+      ids = []
+      indexById = {}
+    }
+
+    songCycle.reset()
 
     function songCycle(id, name, cycleSongs) {
       id = identifiable.assignId(indexById, id)

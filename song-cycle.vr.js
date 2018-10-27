@@ -134,7 +134,8 @@ module.exports = library.export(
           var name = null
           var songs = songCycle.songsFromCycle(cycleId)
 
-          addHtml(
+          addHtml.after(
+            ".playhead",
             iterationTemplate(
               singSong,
               addSongForInstance,

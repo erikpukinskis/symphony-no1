@@ -3,7 +3,13 @@ var library = require("module-library")(require)
 module.exports = library.export(
   "clock-tick",
   function(){
-    var nextTick = 0
+    var nextTick
+
+    clockTick.reset = function () {
+      nextTick = 0
+    }
+
+    clockTick.reset()
 
     function clockTick() {
       var tick = nextTick
