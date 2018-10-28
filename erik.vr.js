@@ -55,7 +55,6 @@ library.using([
 
         function addGem(clock) {
           document.querySelector(".clock").innerHTML = "It is "+clock.tick+" o'clock"
-          debugger
           addHtml.after(
             ".playhead",
             tickGem.html())
@@ -114,7 +113,6 @@ library.using([
           gem.pouch(),
           songCycleVr(bridge)]
 
-        debugger
         bridge.send(
           page)})
 
@@ -195,3 +193,6 @@ library.using([
 //   balance checkbook
 //   meal planning
 //   grocery shopping
+
+
+// floors: https://www.youtube.com/watch?v=hIqOgqpNLXw

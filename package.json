@@ -9,7 +9,8 @@
     "make-request": "*",
     "module-library": "*",
     "web-element": "*",
-    "web-site": "*"
+    "web-site": "*",
+    "error-if": "*"
   },
   "scripts": {
     "start": "node cycles"

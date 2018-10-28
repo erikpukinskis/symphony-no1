@@ -1,61 +1,15 @@
 var library = require("module-library")(require)
 
-library.define(
-  "assert",
-  function() {
-
-    return {
-      match: assertMatch,
-      matchCount: assertMatchCount,
-    }
-
-    function assertMatchCount(string, search, minimum) {
-      var count = 0
-      string.split("/n").forEach(function(line) {
-        if (line.match(search)) {
-          count++
-        }
-      })
-      if (count < minimum) {
-        throw new Error("Expected string "+summarize(string)+" to match "+search+" at least "+minimum+" times")
-      }
-    }
-
-    function replaceAll(string, search, replacement) {
-        return string.replace(new RegExp(search, 'g'), replacement);
-    }
-
-    function summarize(string) {
-      var summary = string.trim().slice(0,500)
-
-      summary = replaceAll(summary, /\n/,"\\n")
-
-      summary = replaceAll(summary, /\s+/, " ")
-
-      if (string.length > 100) {
-        return "<<<\n"+summary+"....\n>>>"
-      } else {
-        return "<<<"+summary+">>>"
-      }
-    }
-
-    function assertMatch(string, search) {
-      if (!string.match(search)) {
-        throw new Error("Expected string "+summarize(string)+" to match "+search)
-      }
-    }
-  })
-
 module.exports = library.export(
   "boot-universe",[
   library.ref(),
-  "assert",
+  "error-if",
   "web-element",
   "bridge-module",
   "a-wild-universe-appeared",
   "./clock-tick.model",
   "./song-cycle.model"],
-  function(lib, assert, element, bridgeModule, aWildUniverseAppeared, clockTick, songCycle) {
+  function(lib, errorIf, element, bridgeModule, aWildUniverseAppeared, clockTick, songCycle) {
 
     function bootUniverse(site) {
 
@@ -105,8 +59,6 @@ module.exports = library.export(
 
     function prepareBridge(bridge, universe) {
 
-      debugger
-
       var singleton = bridge.defineSingleton(
         "universe",[
         bridgeModule(
@@ -141,10 +93,6 @@ module.exports = library.export(
           return universe
         })
 
-
-      assert.matchCount(bridge.script(), /a-wild-universe/, 3)
-
-      debugger
       return singleton
     }
 
@@ -189,7 +137,7 @@ module.exports = library.export(
               statement.html())
             setTimeout(
               done,
-              200)}})
+              250)}})
 
       var el = universeTemplate(bigBang)
 
