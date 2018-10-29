@@ -2,17 +2,32 @@ var library = require("module-library")(require)
 
 library.define(
   "song-cycle.vr/iterationTemplate",[
-  "web-element"],
-  function(element) {
+  "web-element", "song-cycle"],
+  function(element, songCycle) {
 
     var iterationTemplate = element.template(
       ".song-cycle-iteration",
       function(singSong,addSongForInstance, iterationId, name, cycleName, songs) {
         
         function button(song) {
-          return element(
-            "button",
-            "Sing "+song)}
+          var wasSung = songCycle.wasSongSungIn(iterationId, song)
+
+          var check = element(
+            ".check-mark",
+            element.style({
+              "display": wasSung ? "inline-block" : "none"}),
+            "&#10004;")
+
+          var el = element(
+            "button.song-button",
+            check,
+            "Sing "+song)
+
+          if (wasSung) {
+            el.appendStyles({
+              "background": "blue"})}
+
+          return el}
 
         this.addChild(
           element(
@@ -47,7 +62,7 @@ module.exports = library.export(
       var cycles = songCycle.mapCycles(
         cycleTemplate)
 
-      var instances = songCycle.mapOpenInstances(
+      var instances = songCycle.mapOpenIterations(
         iterationTemplate.bind(
           null,
           calls.singSong,
@@ -117,16 +132,9 @@ module.exports = library.export(
         "background": "yellow",
         "padding": "10px",
       },
-      " .open-iteration-check": {
-        "display": "none",
-        "margin-right": "0.25em",
-      },
       " .open-iteration-instruction": {
         "display": "none"},
-      ".opened .open-iteration-check": {
-        "display": "inline-block"},
-      " .song-button": {
-        "margin-right": "0.25em"}})
+    })
 
     var startCycleForm = element.template(
       "form.lil-page.start-cycle-form",{
@@ -149,9 +157,13 @@ module.exports = library.export(
           element("p", "When you are ready, open the cycle with something ceremonial"),
           element(".open-iteration-instruction.warning", "You needa do this"),
           element(
-            "button.open-iteration-button",{
+            "button.song-button.open-iteration-button",{
             "onclick": openIteration.withArgs(id, BrowserBridge.event).evalable()},
-            element(".open-iteration-check", "&#10004;"),
+            element(
+              ".check-mark.open-iteration-check",
+              element.style({
+                "display": "none"}),
+              "&#10004;"),
             "Opening ceremony performed"),
           element("p", "And then choose an easy task to get some momentum:"),
           songs.map(songButton),
@@ -162,6 +174,17 @@ module.exports = library.export(
             "value": id})])
       })
 
+    var stylesheet = element.stylesheet([
+      startCycleStyle,
+      element.style(
+        ".song-button",{
+        "margin-right": "0.25em",
+        " .check-mark": {
+          "margin-right": "0.25em",
+        },
+      }),
+    ])
+
     songCycleVr.prepareSite = function(site, bridge, universe) {
 
       var singSong = bridge.defineFunction(
@@ -170,9 +193,7 @@ module.exports = library.export(
       var addSongForInstance = bridge.defineFunction(
         function addSongForInstance(){})
 
-      bridge.addToHead(
-        element.stylesheet(
-          startCycleStyle))
+      bridge.addToHead(stylesheet)
 
       bridge.see(
         "song-cycle.vr/calls",{
@@ -191,7 +212,7 @@ module.exports = library.export(
           event.preventDefault()
           if (iteration.opened[id]) {
             return }
-          document.getElementById("start-cycle-form-"+id).classList.add("opened")
+          document.querySelector("#start-cycle-form-"+id+" .open-iteration-button .check-mark").style.display = "inline-block"
 
           document.querySelector("#start-cycle-form-"+id+" .open-iteration-instruction").style.display = "none"
 
@@ -244,7 +265,7 @@ module.exports = library.export(
 
           var iterationId = songCycle.open(null, cycleId, iterationName, firstSongSung)
 
-          universe.do(iterationId, cycleId, iterationName, firstSongSung)
+          universe.do("songCycle.open", iterationId, cycleId, iterationName, firstSongSung)
 
           response.send("sang "+firstSongSung+" to open \""+cycleName+"\". Iteration "+iterationId+" called "+iterationName)
         })
