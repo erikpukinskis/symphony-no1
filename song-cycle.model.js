@@ -42,6 +42,16 @@ module.exports = library.export(
         values.push(value)}
       return values}
 
+    songCycle.getName = function(id) {
+      return names[
+        indexById[
+          id]]}
+
+    songCycle.getSongs = function(id) {
+      return songSets[
+        indexById[
+        id]]}
+
     songCycle.mapOpenInstances = function(callback) {
       console.log("warning: implement mapOpenInstances")
       return []}

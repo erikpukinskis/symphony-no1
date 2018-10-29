@@ -29,6 +29,7 @@ library.using([
   function (lib, WebSite, BrowserBridge, element, basicStyles, makeRequest, bridgeModule, clockTick, aWildUniverseAppeared, gem, universeVr, songCycleVr) {
     var site = new WebSite()
     var baseBridge = new BrowserBridge()
+    
     basicStyles.addTo(baseBridge)
 
     var universe = universeVr(site)

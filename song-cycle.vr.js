@@ -31,8 +31,9 @@ module.exports = library.export(
   "web-element",
   "./song-cycle.model",
   "song-cycle.vr/iterationTemplate",
-  "bridge-module"],
-  function(lib, element, songCycle, iterationTemplate, bridgeModule) {
+  "bridge-module",
+  "browser-bridge"],
+  function(lib, element, songCycle, iterationTemplate, bridgeModule, BrowserBridge) {
 
     function songCycleVr(bridge) {
 
@@ -44,9 +45,7 @@ module.exports = library.export(
       var calls = bridge.remember("song-cycle.vr/calls")
 
       var cycles = songCycle.mapCycles(
-        cycleTemplate.bind(
-          null,
-          calls.startCycle))
+        cycleTemplate)
 
       var instances = songCycle.mapOpenInstances(
         iterationTemplate.bind(
@@ -56,8 +55,28 @@ module.exports = library.export(
 
       return [button].concat(instances, cycles)}
 
-    var form = element(
-      "form",{
+    var cycleTemplate = element.template(
+      ".song-cycle",
+      element.style({
+        "background": "#cffeff"}),
+      function(id, name, songs) {
+        this.addChildren([
+          element(
+            "h1",
+            name+" cycle"),
+          element(
+            "p",
+            songs.join(
+              ", ")),
+          element(
+            "a.button",{
+            "href": "/cycles/"+id+"/start"},
+            "Start "+name+" cycle"),
+        ])
+      })
+
+    var newCycleForm = element(
+      "form.lil-page",{
       "method": "post",
       "action": "/cycles"},[
         element(
@@ -83,27 +102,62 @@ module.exports = library.export(
           "value": "Create cycle"})),
       ])
 
-    var cycleTemplate = element.template(
-      ".song-cycle",
-      element.style({
-        "background": "#cffeff"}),
-      function(startCycle, id, name, songs) {
-        this.addChildren([
-          element(
-            "h1",
-            name+" cycle"),
-          element(
-            "p",
-            songs.join(
-              ", ")),
-          element(
-            "button",{
-            "onclick": startCycle.withArgs(id, name).evalable()},
-            "Start "+name+" cycle"),
-        ])
-      })
+    var songButton = element.template(
+      "input",{
+      "type": "submit",
+      "name": "firstSongSung"},
+      function(songText) {
+        this.addAttribute(
+          "value",
+          songText)})
 
-    var page = element(".lil-page", form)
+    var startCycleStyle = element.style(
+      ".start-cycle-form",{
+      " .warning": {
+        "background": "yellow",
+        "padding": "10px",
+      },
+      " .open-iteration-check": {
+        "display": "none",
+        "margin-right": "0.25em",
+      },
+      " .open-iteration-instruction": {
+        "display": "none"},
+      ".opened .open-iteration-check": {
+        "display": "inline-block"}})
+
+    var startCycleForm = element.template(
+      "form.lil-page.start-cycle-form",{
+      "method": "post",
+      "action": "/cycles/iterations"},
+      function(openIteration, ensureIterationOpened, id, name, songs) {
+
+        this.addAttributes({
+          "onsubmit": ensureIterationOpened.withArgs(id, BrowserBridge.event).evalable(),
+          "id": "start-cycle-form-"+id})
+
+        this.addChildren([
+          element("h1", "Starting "+name),
+          element("p", "Which instance of this cycle is starting?"),
+          element(
+            "input",{
+            "type": "text",
+            "name": "instanceName",
+            "placeholder": "name"}),
+          element("p", "When you are ready, open the cycle with something ceremonial"),
+          element(".open-iteration-instruction.warning", "You needa do this"),
+          element(
+            "button.open-iteration-button",{
+            "onclick": openIteration.withArgs(id, BrowserBridge.event).evalable()},
+            element(".open-iteration-check", "&#10004;"),
+            "Opening ceremony performed"),
+          element("p", "And then choose an easy task to get some momentum:"),
+          songs.map(songButton),
+          element(
+            "input",{
+            "type": "hidden",
+            "name": "cycleId"})])
+      })
 
     songCycleVr.prepareSite = function(site, bridge, universe) {
 
@@ -113,50 +167,76 @@ module.exports = library.export(
       var addSongForInstance = bridge.defineFunction(
         function addSongForInstance(){})
 
-      var startCycle = bridge.defineFunction([
-        bridgeModule(
-          lib,
-          "add-html",
-          bridge),
-        bridgeModule(
-          lib,
-          "song-cycle.vr/iterationTemplate",
-          bridge),
-        bridgeModule(
-          lib,
-          "song-cycle",
-          bridge),
-        singSong.asCall(),
-        addSongForInstance.asCall()],
-        function startCycle(addHtml, iterationTemplate, songCycle, singSong, addSongForInstance, cycleId, cycleName) {
-
-          var id = null
-          var name = null
-          var songs = songCycle.songsFromCycle(cycleId)
-
-          addHtml.after(
-            ".playhead",
-            iterationTemplate(
-              singSong,
-              addSongForInstance,
-              id,
-              name,
-              cycleName,
-              songs)
-            .html())
-        })
+      bridge.addToHead(
+        element.stylesheet(
+          startCycleStyle))
 
       bridge.see(
         "song-cycle.vr/calls",{
-        startCycle: startCycle,
         singSong: singSong,
         addSongForInstance: addSongForInstance})
+
+      var iteration = bridge.defineSingleton(
+        "iteration",
+        function() {
+          return {
+            "opened": {}}})
+
+      var openIteration = bridge.defineFunction([
+        iteration],
+        function openIteration(iteration, id, event) {
+          event.preventDefault()
+          if (iteration.opened[id]) {
+            return }
+          document.getElementById("start-cycle-form-"+id).classList.add("opened")
+
+          document.querySelector("#start-cycle-form-"+id+" .open-iteration-instruction").style.display = "none"
+          
+          iteration.opened[id] = true})
+
+      var ensureIterationOpened = bridge.defineFunction([
+        iteration],
+        function ensureIterationOpened(iteration, id, event) {
+          if (iteration.opened[id]) {
+            return }
+          else {
+            event.preventDefault()
+            var warning = document.querySelector("#start-cycle-form-"+id+" .open-iteration-instruction")
+            warning.style.display = "block"
+            warning.scrollIntoView()}
+        })
 
       site.addRoute(
         "get",
         "/cycles/new",
-        bridge.requestHandler(page))
+        bridge.requestHandler(newCycleForm))
 
+      site.addRoute(
+        "get",
+        "/cycles/:id/start",
+        function(request, response) {
+          var id = request.params.id
+          var name = songCycle.getName(id)
+          var songs = songCycle.getSongs(id)
+
+          bridge.forResponse(
+            response)
+          .send(
+            startCycleForm(
+              openIteration,
+              ensureIterationOpened,
+              id,
+              name,
+              songs))
+        })
+
+      site.addRoute(
+        "post",
+        "/iterations",
+        function(request, response) {
+          var cycleId = request.body.cycleId
+          var firstSongSung = request.body.firstSongSung
+        })
       site.addRoute(
         "post",
         "/cycles",
