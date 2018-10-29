@@ -2,7 +2,7 @@
   "dependencies": {
     "a-wild-universe-appeared": "^0.40.0",
     "add-html": "^0.28.0",
-    "basic-styles": "^0.33.0",
+    "basic-styles": "^0.34.0",
     "bridge-module": "*",
     "browser-bridge": "^0.142.0",
     "creature": "*",

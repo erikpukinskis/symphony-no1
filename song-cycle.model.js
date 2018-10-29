@@ -8,12 +8,20 @@ module.exports = library.export(
     var songSets
     var ids
     var indexById
+    var iterationIndexById
+    var iterationNames
+    var iterationCycleIds
+    var iterationSongsSung
 
     songCycle.reset = function () {
       names = []
       songSets = []
       ids = []
       indexById = {}
+      iterationIndexById = {}
+      iterationNames = []
+      iterationCycleIds = []
+      iterationSongsSung = []
     }
 
     songCycle.reset()
@@ -59,5 +67,15 @@ module.exports = library.export(
     songCycle.songsFromCycle = function(cycleId) {
       var i = indexById[cycleId]
       return songSets[i]}
+
+    songCycle.open = function(iterationId, cycleId, iterationName, firstSongSung) {
+      iterationId = identifiable.assignId(iterationIndexById, iterationId)
+      var iterationIndex = iterationNames.length
+      iterationNames.push(iterationName)
+      iterationCycleIds.push(cycleId)
+      iterationSongsSung.push([firstSongSung])
+      iterationIndexById[iterationId] = iterationIndex
+      return iterationId
+    }
 
     return songCycle})

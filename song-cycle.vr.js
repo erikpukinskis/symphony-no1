@@ -103,7 +103,7 @@ module.exports = library.export(
       ])
 
     var songButton = element.template(
-      "input",{
+      "input.song-button",{
       "type": "submit",
       "name": "firstSongSung"},
       function(songText) {
@@ -124,12 +124,14 @@ module.exports = library.export(
       " .open-iteration-instruction": {
         "display": "none"},
       ".opened .open-iteration-check": {
-        "display": "inline-block"}})
+        "display": "inline-block"},
+      " .song-button": {
+        "margin-right": "0.25em"}})
 
     var startCycleForm = element.template(
       "form.lil-page.start-cycle-form",{
       "method": "post",
-      "action": "/cycles/iterations"},
+      "action": "/iterations"},
       function(openIteration, ensureIterationOpened, id, name, songs) {
 
         this.addAttributes({
@@ -138,11 +140,11 @@ module.exports = library.export(
 
         this.addChildren([
           element("h1", "Starting "+name),
-          element("p", "Which instance of this cycle is starting?"),
+          element("p", "What is this iteration of the cycle called?"),
           element(
             "input",{
             "type": "text",
-            "name": "instanceName",
+            "name": "iterationName",
             "placeholder": "name"}),
           element("p", "When you are ready, open the cycle with something ceremonial"),
           element(".open-iteration-instruction.warning", "You needa do this"),
@@ -156,7 +158,8 @@ module.exports = library.export(
           element(
             "input",{
             "type": "hidden",
-            "name": "cycleId"})])
+            "name": "cycleId",
+            "value": id})])
       })
 
     songCycleVr.prepareSite = function(site, bridge, universe) {
@@ -191,7 +194,7 @@ module.exports = library.export(
           document.getElementById("start-cycle-form-"+id).classList.add("opened")
 
           document.querySelector("#start-cycle-form-"+id+" .open-iteration-instruction").style.display = "none"
-          
+
           iteration.opened[id] = true})
 
       var ensureIterationOpened = bridge.defineFunction([
@@ -235,8 +238,17 @@ module.exports = library.export(
         "/iterations",
         function(request, response) {
           var cycleId = request.body.cycleId
+          var cycleName = songCycle.getName(cycleId)
+          var iterationName = request.body.iterationName
           var firstSongSung = request.body.firstSongSung
+
+          var iterationId = songCycle.open(null, cycleId, iterationName, firstSongSung)
+
+          universe.do(iterationId, cycleId, iterationName, firstSongSung)
+
+          response.send("sang "+firstSongSung+" to open \""+cycleName+"\". Iteration "+iterationId+" called "+iterationName)
         })
+
       site.addRoute(
         "post",
         "/cycles",
