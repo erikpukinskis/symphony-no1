@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "a-wild-universe-appeared": "^0.40.0",
+    "a-wild-universe-appeared": "^0.41.0",
     "add-html": "^0.28.0",
     "basic-styles": "^0.35.0",
     "bridge-module": "^0.37.0",

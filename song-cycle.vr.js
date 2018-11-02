@@ -44,7 +44,7 @@ module.exports = library.export(
       var calls = bridge.remember("song-cycle.vr/calls")
 
       var cycles = songCycle.mapCycles(
-        cycleTemplate)
+        cycleTemplate.bind(null, calls.addSongToCycle))
 
       var instances = songCycle.mapOpenIterations(
         iterationTemplate.bind(
@@ -122,7 +122,28 @@ module.exports = library.export(
       ".song-cycle",
       element.style({
         "background": "#cffeff"}),
-      function(id, name, songs) {
+      function(addSongToCycle, id, name, songs) {
+        var addSongButton = element(
+          "button",{
+          "onclick": addSongToCycle.withArgs(id).evalable()},
+          "Add song to cycle")
+        
+        var addSongForm = element(
+          "form.add-song-to-cycle-"+id,{
+          "method": "post",
+          "action": "/cycles/"+id+"/songs"},
+          element.style({
+            "display": "none"}),
+          element("p", element(
+            "input.song-field",{
+            "type": "text",
+            "name": "song",
+            "placeholder": "type your song here"})),
+          element(
+            "input.song-submit",{
+            "type": "submit",
+            "value": "It is sung in "+name}))
+
         this.addChildren([
           element(
             "h1",
@@ -132,10 +153,13 @@ module.exports = library.export(
             songs.join(
               ", ")),
           element(
-            "a.button",{
-            "href": "/cycles/"+id+"/start"},
-            "Start "+name+" cycle"),
-        ])
+            "p",
+            element(
+              "a.button",{
+              "href": "/cycles/"+id+"/start"},
+              "Start "+name+" cycle"),
+            addSongButton),
+          addSongForm])
       })
 
     var newCycleForm = element(
@@ -233,9 +257,13 @@ module.exports = library.export(
 
     var stylesheet = element.stylesheet([
       startCycleStyle,
+
+      element.style(
+        "a.button, button",{
+          "margin-right": "0.25em"}),
+
       element.style(
         ".song-button",{
-        "margin-right": "0.25em",
         ".checked": {
           "background": "blue",
         },
@@ -269,11 +297,18 @@ module.exports = library.export(
       var addSongForInstance = bridge.defineFunction(
         function addSongForInstance(){})
 
+      var addSongToCycle = bridge.defineFunction(
+        function addSongToCycle(cycleId){
+          document.querySelector(".add-song-to-cycle-"+cycleId+" .song-field").value = ""
+          document.querySelector(".add-song-to-cycle-"+cycleId).style.display = "block"
+        })
+
       bridge.addToHead(stylesheet)
 
       bridge.see(
         "song-cycle.vr/calls",{
         singSong: singSong,
+        addSongToCycle: addSongToCycle,
         addSongForInstance: addSongForInstance})
 
       var iteration = bridge.defineSingleton(
@@ -343,7 +378,7 @@ module.exports = library.export(
 
           var expiresAt = songCycle.getExpiresAt(iterationId)
 
-          universe.do("songCycle.open", iterationId, cycleId, iterationName, firstSongSung, expiresAt)
+          universe.do("songCycle.open", iterationId, cycleId, iterationName, firstSongSung, expiresAt || null)
 
           response.redirect("/")
         })

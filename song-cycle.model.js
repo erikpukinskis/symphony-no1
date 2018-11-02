@@ -109,7 +109,7 @@ module.exports = library.export(
           var expiresAt = iterationExpiresAt[iterationId]
           console.log("expires at", expiresAt)
           debugger
-          if (expiresAt < now) {
+          if (expiresAt && expiresAt < now) {
             return iterationId}})
 
       return expiredIterationId}
