@@ -93,6 +93,11 @@ library.using([
 
     songCycleVr.prepareSite(site, baseBridge, universe)
 
+    site.use(
+      songCycleVr.middleware.bind(
+        null,
+        baseBridge))
+
     site.addRoute(
       "get",
       "/",

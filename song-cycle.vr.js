@@ -1,54 +1,38 @@
 var library = require("module-library")(require)
 
-library.define(
-  "song-cycle.vr/iterationTemplate",[
-  "web-element", "song-cycle"],
-  function(element, songCycle) {
-
-    var iterationTemplate = element.template(
-      ".song-cycle-iteration",
-      function(singSong,addSongForInstance, iterationId, name, cycleName, songs) {
-        
-        function button(song) {
-          var wasSung = songCycle.wasSongSungIn(iterationId, song)
-
-          var check = element(
-            ".check-mark",
-            element.style({
-              "display": wasSung ? "inline-block" : "none"}),
-            "&#10004;")
-
-          var el = element(
-            "button.song-button",
-            check,
-            "Sing "+song)
-
-          if (wasSung) {
-            el.appendStyles({
-              "background": "blue"})}
-
-          return el}
-
-        this.addChild(
-          element(
-            "h1",
-            "Singing "+name+" from songs of "+cycleName))
-
-        this.addChildren(
-          songs.map(button))
-      })
-
-    return iterationTemplate})
-
 module.exports = library.export(
   "song-cycle.vr",[
   library.ref(),
   "web-element",
   "./song-cycle.model",
-  "song-cycle.vr/iterationTemplate",
   "bridge-module",
   "browser-bridge"],
-  function(lib, element, songCycle, iterationTemplate, bridgeModule, BrowserBridge) {
+  function(lib, element, songCycle, bridgeModule, BrowserBridge) {
+
+    songCycleVr.middleware = function(baseBridge, request, response, next) {
+      var expiredIterationId = songCycle.getExpiredIteration()
+
+      if (!expiredIterationId) {
+        return next()
+      }
+
+      var songs = songCycle.songsFromIteration(expiredIterationId)
+
+      var iterationName = songCycle.getIterationName(expiredIterationId)
+
+      var bridge = baseBridge.forResponse(response)
+
+      var calls = bridge.remember(
+        "song-cycle.vr/calls")
+
+      var page = closeIterationForm(
+        calls.singSong,
+        expiredIterationId,
+        songs,
+        iterationName)
+
+      bridge.send(page)
+    }
 
     function songCycleVr(bridge) {
 
@@ -69,6 +53,70 @@ module.exports = library.export(
           calls.addSongForInstance))
 
       return [button].concat(instances, cycles)}
+
+
+
+    // Iteration templates
+
+    var closeIterationForm = element.template(
+      "form.lil-page",{
+      "method": "post"},
+      function(singSong, iterationId, songs, cycleName){
+
+        this.addAttribute("action", "/iterations/"+iterationId+"/close")
+
+        this.addChildren([
+          element("h1", cycleName+" has expired"),
+          element("p", "Ready to close it?"),
+          songSetTemplate(singSong, iterationId, songs),
+          element("p",element(
+            "input",{
+            "type": "submit",
+            "value": "Close iteration"}))
+        ])
+      })
+    
+    var songSetTemplate = element.template(
+      ".song-set",
+      function(singSong, iterationId, songs) {
+
+        function button(song) {
+          var wasSung = songCycle.wasSongSungIn(iterationId, song)
+
+          var check = element(
+            ".check-mark",
+            "&#10004;")
+
+          var el = element(
+            "button.song-button",
+            check,
+            "Sing "+song,{
+            "onclick": singSong.withArgs(iterationId, song, BrowserBridge.event).evalable()})
+
+          if (wasSung) {
+            el.addSelector(".checked")}
+
+          return el}
+
+        this.addChildren(
+          songs.map(
+            button))
+      })
+
+    var iterationTemplate = element.template(
+      ".song-cycle-iteration",
+      function(singSong,addSongForInstance, iterationId, name, cycleName, songs) {
+        
+        this.addChild(
+          element(
+            "h1",
+            "Singing "+name+" from songs of "+cycleName))
+
+        this.addChild(
+          songSetTemplate(singSong, iterationId, songs))
+      })    
+
+    // Cycle templates
 
     var cycleTemplate = element.template(
       ".song-cycle",
@@ -111,6 +159,15 @@ module.exports = library.export(
           "placeholder": "one song\ntwo\nred song\nblue"},
           element.style({
             "height": "12em"})),
+        element(
+          "p",
+          "How many seconds til it's over, complete or not?"),
+        element(
+          "input",{
+          "type": "text",
+          "name": "expiresIn",
+          "placeholder": "seconds",
+          "size": "4"}),
         element("p", element(
           "input",{
           "type": "submit",
@@ -179,16 +236,35 @@ module.exports = library.export(
       element.style(
         ".song-button",{
         "margin-right": "0.25em",
+        ".checked": {
+          "background": "blue",
+        },
         " .check-mark": {
+          "display": "none",
           "margin-right": "0.25em",
+        },
+        ".checked .check-mark": {
+          "display": "inline-block",
         },
       }),
     ])
 
     songCycleVr.prepareSite = function(site, bridge, universe) {
 
-      var singSong = bridge.defineFunction(
-        function singSong(){})
+      var singSong = bridge.defineFunction([
+        bridgeModule(
+          lib,
+          "make-request",
+          bridge)],
+        function singSong(makeRequest, iterationId, song, event){
+          event.target.classList.add("checked")
+          makeRequest({
+            "method": "post",
+            "path": "/iterations/"+iterationId+"/songs",
+            "data": {
+              "song": song}
+          })
+        })
 
       var addSongForInstance = bridge.defineFunction(
         function addSongForInstance(){})
@@ -241,7 +317,7 @@ module.exports = library.export(
         function(request, response) {
           var id = request.params.id
           var name = songCycle.getName(id)
-          var songs = songCycle.getSongs(id)
+          var songs = songCycle.songsFromCycle(id)
 
           bridge.forResponse(
             response)
@@ -265,10 +341,36 @@ module.exports = library.export(
 
           var iterationId = songCycle.open(null, cycleId, iterationName, firstSongSung)
 
-          universe.do("songCycle.open", iterationId, cycleId, iterationName, firstSongSung)
+          var expiresAt = songCycle.getExpiresAt(iterationId)
 
-          response.send("sang "+firstSongSung+" to open \""+cycleName+"\". Iteration "+iterationId+" called "+iterationName)
+          universe.do("songCycle.open", iterationId, cycleId, iterationName, firstSongSung, expiresAt)
+
+          response.redirect("/")
         })
+
+      site.addRoute(
+        "post",
+        "/iterations/:iterationId/songs",
+        function(request, response) {
+          var iterationId = request.params.iterationId
+          var song = request.body.song
+
+          songCycle.sing(iterationId, song)
+          universe.do("songCycle.sing", iterationId, song)
+
+          response.json({ok: true})
+        })
+
+      site.addRoute(
+        "post",
+        "/iterations/:iterationId/close",
+        function(request, response) {
+          var iterationId = request.params.iterationId
+          var now = new Date()
+          songCycle.close(iterationId, now)
+          universe.do("songCycle.close", iterationId, now)
+
+          response.redirect("/")})
 
       site.addRoute(
         "post",
@@ -276,6 +378,10 @@ module.exports = library.export(
         function(request, response) {
           var name = request.body.name
           var songs = []
+          var expiresIn = parseInt(request.body.expiresIn)
+
+          if (Number.isNaN(expiresIn)) {
+            expiresIn = null}
 
           request.body.songs.split("\n").forEach(
             function(text) {
@@ -283,8 +389,12 @@ module.exports = library.export(
               if (text.length > 0) {
                 songs.push(text)}})
 
-          var id = songCycle(null, name, songs)
-          universe.do("songCycle", id, name, songs)
+          var cycleId = songCycle(null, name, songs)
+          universe.do("songCycle", cycleId, name, songs)
+
+          if (expiresIn) {
+            songCycle.expiresIn(cycleId, expiresIn)
+            universe.do("songCycle.expiresIn", cycleId, expiresIn)}
 
           response.redirect("/")
         })

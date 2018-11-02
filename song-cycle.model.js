@@ -9,14 +9,22 @@ module.exports = library.export(
     var ids
     var indexById
 
+    var cycleDurations
+    var iterationExpiresAt
+
     var iterationIds
     var iterationNames
     var iterationIds
     var iterationCycleIds
     var iterationSongsSung
     var iterationIndexById
+    var iterationClosedAt
 
     songCycle.reset = function () {
+      cycleDurations = {}
+      iterationExpiresAt = {}
+      iterationClosedAt = {}
+
       names = []
       songSets = []
       ids = []
@@ -31,9 +39,9 @@ module.exports = library.export(
     songCycle.reset()
 
     function songCycle(id, name, cycleSongs) {
-      id = identifiable.assignId(indexById, id)
+      id = identifiable.assignId(indexById, id, "cycl")
 
-      console.log("heard song", name, id)
+      console.log("heard cycle", name, id)
       var index = ids.length
       indexById[id] = index
 
@@ -59,20 +67,23 @@ module.exports = library.export(
         indexById[
           id]]}
 
-    songCycle.getSongs = function(id) {
-      return songSets[
-        indexById[
-        id]]}
+    songCycle.getIterationName = function(iterationId) {
+      var index = iterationIndexById[iterationId]
+      return iterationNames[index]
+    }
 
     songCycle.mapOpenIterations = function(callback) {
       var values = []
 
       for(var i=0; i<iterationIds.length; i++) {
+
+        var iterationId = iterationIds[i]
+        if (iterationClosedAt[iterationId]) {
+          continue }
+
         var cycleId = iterationCycleIds[i]
         var cycleName = songCycle.getName(cycleId)
-        var songs = songCycle.songsFromCycle(cycleId)
-
-        debugger
+        var songs = songCycle.songsFromIteration(iterationId)
 
         var value = callback(
           iterationIds[i],
@@ -85,11 +96,29 @@ module.exports = library.export(
 
       return values}
 
+    songCycle.expiresIn = function(cycleId, seconds) {
+      cycleDurations[cycleId] = seconds
+    }
+
+    songCycle.getExpiredIteration = function() {
+      var expiringIterationIds = Object.keys(iterationExpiresAt)
+      var now = new Date()
+
+      var expiredIterationId = expiringIterationIds.find(
+        function(iterationId) {
+          var expiresAt = iterationExpiresAt[iterationId]
+          console.log("expires at", expiresAt)
+          debugger
+          if (expiresAt < now) {
+            return iterationId}})
+
+      return expiredIterationId}
+
+
     songCycle.wasSongSungIn = function(iterationId, song) {
       var iterationIndex = iterationIndexById[iterationId]
       var songsSung = iterationSongsSung[iterationIndex]
-      return contains(songsSung, song)
-    }
+      return contains(songsSung, song)}
 
     function contains(array, value) {
       if (!Array.isArray(array)) {
@@ -109,9 +138,17 @@ module.exports = library.export(
       var i = indexById[cycleId]
       return songSets[i]}
 
-    songCycle.open = function(iterationId, cycleId, iterationName, firstSongSung) {
 
-      iterationId = identifiable.assignId(iterationIndexById, iterationId)
+    songCycle.songsFromIteration = function(iterationId) {
+      identifiable.valid("iter", iterationId)
+      var index = iterationIndexById[iterationId]
+      var cycleId = iterationCycleIds[index]
+      return songCycle.songsFromCycle(cycleId)
+    }
+
+    songCycle.open = function(iterationId, cycleId, iterationName, firstSongSung, expiresAt) {
+
+      iterationId = identifiable.assignId(iterationIndexById, iterationId, "iter")
 
       var iterationIndex = iterationNames.length
 
@@ -122,6 +159,30 @@ module.exports = library.export(
 
       iterationIndexById[iterationId] = iterationIndex
 
+      var cycleDuration = cycleDurations[cycleId]
+      if (typeof expiresAt == "string") {
+        expiresAt = new Date(expiresAt)
+      } else if (!expiresAt && cycleDuration != null) {
+        expiresAt = new Date()
+        expiresAt.setSeconds(expiresAt.getSeconds() + cycleDuration)
+      }
+
+      iterationExpiresAt[iterationId] = expiresAt
+
       return iterationId}
+
+    songCycle.close = function(iterationId, closedAt) {
+      delete iterationExpiresAt[iterationId]
+      iterationClosedAt[iterationId] = closedAt
+    }
+
+    songCycle.getExpiresAt = function(iterationId) {
+      return iterationExpiresAt[iterationId]
+    }
+    
+    songCycle.sing = function(iterationId, song) {
+      var index = iterationIndexById[iterationId]
+      iterationSongsSung[index].push(song)
+    }
 
     return songCycle})
