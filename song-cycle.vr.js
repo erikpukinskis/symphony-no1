@@ -50,7 +50,8 @@ module.exports = library.export(
         iterationTemplate.bind(
           null,
           calls.singSong,
-          calls.addSongForInstance))
+          calls.addSongForInstance,
+          calls.celebrateIteration))
 
       return [button].concat(instances, cycles)}
 
@@ -105,16 +106,43 @@ module.exports = library.export(
 
     var iterationTemplate = element.template(
       ".song-cycle-iteration",
-      function(singSong,addSongForInstance, iterationId, name, cycleName, songs) {
+      function(singSong,addSongForInstance, celebrateIteration, iterationId, name, cycleName, songs) {
         
-        this.addChild(
+        this.addSelector(
+          ".iteration-"+iterationId)
+
+        var abortButton = element(
+          "form",{
+          "method": "post",
+          "action": "/iterations/"+iterationId+"/close"},
+          element(
+            "input",{
+            "type": "submit",
+            "value": "Abort iteration"}))
+
+        var celebrateButton = element(
+          "button",{
+          "onclick": celebrateIteration.withArgs(iterationId).evalable()},
+          "Celebrate iteration")
+
+        var isComplete = songCycle.isComplete(iterationId)
+
+        this.addChildren([
           element(
             "h1",
-            "Singing "+name+" from songs of "+cycleName))
+            "Singing "+name+" from songs of "+cycleName),
 
-        this.addChild(
-          songSetTemplate(singSong, iterationId, songs))
-      })    
+          songSetTemplate(
+            singSong,
+            iterationId,
+            songs),
+
+          element(
+            "p.actions",
+            isComplete ? celebrateButton : abortButton),
+        ])
+      })  
+
 
     // Cycle templates
 
@@ -127,7 +155,17 @@ module.exports = library.export(
           "button",{
           "onclick": addSongToCycle.withArgs(id).evalable()},
           "Add song to cycle")
-        
+
+        var startCycleButton = element(
+          "a.button",{
+          "href": "/cycles/"+id+"/start"},
+          "Start "+name+" cycle")
+
+        var bulkEditButton =           element(
+            "a.button",{
+            "href": "/cycles/"+id+"/bulk-edit"},
+            "Bulk edit songs")
+
         var addSongForm = element(
           "form.add-song-to-cycle-"+id,{
           "method": "post",
@@ -154,11 +192,9 @@ module.exports = library.export(
               ", ")),
           element(
             "p",
-            element(
-              "a.button",{
-              "href": "/cycles/"+id+"/start"},
-              "Start "+name+" cycle"),
-            addSongButton),
+            startCycleButton,
+            addSongButton,
+            bulkEditButton),
           addSongForm])
       })
 
@@ -197,6 +233,27 @@ module.exports = library.export(
           "type": "submit",
           "value": "Create cycle"})),
       ])
+
+    var bulkEditSongsForm = element.template(
+      "form.lil-page",{
+      "method": "post"},
+      function(cycleId, songs, name) {
+        this.addAttribute("action", "/cycles/"+cycleId+"/songs")
+        this.addChildren([
+          element("h1", "Edit songs for "+name),
+          element(
+            "textarea",{
+            "name": "songs"},
+            songs.join("\n"),
+            element.style({
+              "height": "10em"})),
+          element("p",
+            element(
+              "input",{
+              "type": "submit",
+              "value": "Update songs"})),
+        ])
+      })
 
     var songButton = element.template(
       "input.song-button",{
@@ -277,13 +334,13 @@ module.exports = library.export(
       }),
     ])
 
-    songCycleVr.prepareSite = function(site, bridge, universe) {
+    songCycleVr.prepareSite = function(site, baseBridge, universe, grabGem) {
 
-      var singSong = bridge.defineFunction([
+      var singSong = baseBridge.defineFunction([
         bridgeModule(
           lib,
           "make-request",
-          bridge)],
+          baseBridge)],
         function singSong(makeRequest, iterationId, song, event){
           event.target.classList.add("checked")
           makeRequest({
@@ -294,30 +351,71 @@ module.exports = library.export(
           })
         })
 
-      var addSongForInstance = bridge.defineFunction(
+      var addSongForInstance = baseBridge.defineFunction(
         function addSongForInstance(){})
 
-      var addSongToCycle = bridge.defineFunction(
+      var addSongToCycle = baseBridge.defineFunction(
         function addSongToCycle(cycleId){
           document.querySelector(".add-song-to-cycle-"+cycleId+" .song-field").value = ""
           document.querySelector(".add-song-to-cycle-"+cycleId).style.display = "block"
         })
 
-      bridge.addToHead(stylesheet)
+      var celebrateIteration = baseBridge.defineFunction([
+        bridgeModule(
+          lib,
+          "make-request",
+          baseBridge),
+        bridgeModule(
+          lib,
+          "web-element",
+          baseBridge),
+        bridgeModule(
+          lib,
+          "add-html",
+          baseBridge)],
+        function celebrateIteration(makeRequest, element, addHtml, grabGem, iterationId) {
 
-      bridge.see(
+          makeRequest({
+            "method": "post",
+            "path": "/iterations/"+iterationId+"/celebrate"})
+
+          var iteration = document.querySelector(".iteration-"+iterationId)
+
+          var h1 = iteration.querySelector("h1")
+          h1.innerText = h1.innerText.replace(/^Singing/, "Sang")
+          iteration.removeChild(
+            iteration.querySelector(
+              ".actions"))
+
+          iteration.querySelectorAll(".song-button").forEach(
+            function(button) {
+              var newGem = element(
+                ".gem",
+                element(".color"))
+              var id = newGem.assignId()
+              newGem.addAttribute(
+                "onclick",
+                grabGem.withArgs(id).evalable())
+              addHtml.inPlaceOf(button, newGem.html())
+            })
+        })
+
+      baseBridge.see(
         "song-cycle.vr/calls",{
         singSong: singSong,
         addSongToCycle: addSongToCycle,
-        addSongForInstance: addSongForInstance})
+        addSongForInstance: addSongForInstance,
+        celebrateIteration: celebrateIteration.withArgs(grabGem.asCall()) })
 
-      var iteration = bridge.defineSingleton(
+      baseBridge.addToHead(stylesheet)
+
+      var iteration = baseBridge.defineSingleton(
         "iteration",
         function() {
           return {
             "opened": {}}})
 
-      var openIteration = bridge.defineFunction([
+      var openIteration = baseBridge.defineFunction([
         iteration],
         function openIteration(iteration, id, event) {
           event.preventDefault()
@@ -329,7 +427,7 @@ module.exports = library.export(
 
           iteration.opened[id] = true})
 
-      var ensureIterationOpened = bridge.defineFunction([
+      var ensureIterationOpened = baseBridge.defineFunction([
         iteration],
         function ensureIterationOpened(iteration, id, event) {
           if (iteration.opened[id]) {
@@ -344,7 +442,7 @@ module.exports = library.export(
       site.addRoute(
         "get",
         "/cycles/new",
-        bridge.requestHandler(newCycleForm))
+        baseBridge.requestHandler(newCycleForm))
 
       site.addRoute(
         "get",
@@ -354,9 +452,9 @@ module.exports = library.export(
           var name = songCycle.getName(id)
           var songs = songCycle.songsFromCycle(id)
 
-          bridge.forResponse(
-            response)
-          .send(
+          var bridge = baseBridge.forResponse(response)
+
+          bridge.send(
             startCycleForm(
               openIteration,
               ensureIterationOpened,
@@ -364,6 +462,42 @@ module.exports = library.export(
               name,
               songs))
         })
+
+      site.addRoute(
+        "post",
+        "/cycles/:id/songs",
+        function(request, response) {
+          var id = request.params.id
+          var song = request.body.song
+          var songs = request.body.songs
+
+          if (song) {
+            songCycle.addSongToCycle(id, song)
+            universe.do("songCycle.addSongToCycle", id, song)
+          } else if (songs) {
+            songs = songs.split(/[\n\r]+/)
+            songCycle.updateSongs(id, songs)
+            universe.do("songCycle.updateSongs", id, songs)
+          }
+
+          response.redirect("/")
+        })
+  
+      site.addRoute(
+        "get",
+        "/cycles/:id/bulk-edit",
+        function(request, response) {
+          var cycleId = request.params.id
+          var songs = songCycle.songsFromCycle(cycleId)
+          var name = songCycle.getName(cycleId)
+
+          var bridge = baseBridge.forResponse(response)
+
+          bridge.send(
+            bulkEditSongsForm(
+              cycleId,
+              songs,
+              name))})
 
       site.addRoute(
         "post",
@@ -406,6 +540,17 @@ module.exports = library.export(
           universe.do("songCycle.close", iterationId, now)
 
           response.redirect("/")})
+
+      site.addRoute(
+        "post",
+        "/iterations/:iterationId/celebrate",
+        function(request, response) {
+          var iterationId = request.params.iterationId
+          var now = new Date()
+          songCycle.complete(iterationId, now)
+          universe.do("songCycle.complete", iterationId, now)
+          response.json({ok: true})
+        })
 
       site.addRoute(
         "post",

@@ -39,14 +39,12 @@ module.exports = library.export(
         this.onclick(grabBinding.withArgs(this.assignId()).evalable())
       })
 
-    var pouches = {}
-
     var minutes = 60
     var hours = 60*minutes
     var days = 24*hours
     var years = 365*days
 
-    gem.prepareSite = function(site) {
+    gem.prepareSite = function(site, universe) {
       if (site.remember("gem")) {
         return }
 
@@ -58,21 +56,23 @@ module.exports = library.export(
           var meId = request.cookies.meId
           if (!meId) {
             meId = creature(null, "anonymous")
+            universe.do("creature", meId, "anonymous")
             response.cookie(
               "meId",
               meId,{
               maxAge: 10*years})
           }
 
-          if (!pouches[meId]) {
-            pouches[meId] = 0
-          }
+          var gemCount = creature.remember(meId, "gemCount") || 0
 
-          pouches[meId]++
+          gemCount++
+
+          creature.see(meId, "gemCount", gemCount)
+          universe.do("creature.see", meId, "gemCount", gemCount)
 
           response.json({
             meId: meId,
-            gemCount: pouches[meId]})
+            gemCount: gemCount})
 
         })
 

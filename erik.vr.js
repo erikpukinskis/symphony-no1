@@ -89,9 +89,9 @@ library.using([
         body,
         gem]))
 
-    gem.prepareSite(site)
+    gem.prepareSite(site, universe)
 
-    songCycleVr.prepareSite(site, baseBridge, universe)
+    songCycleVr.prepareSite(site, baseBridge, universe, grabGem)
 
     site.use(
       songCycleVr.middleware.bind(

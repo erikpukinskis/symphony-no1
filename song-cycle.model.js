@@ -52,6 +52,25 @@ module.exports = library.export(
       return id
     }
 
+    function trim(string) {
+      return string.replace(/\s+/, " ").trim()
+    }
+
+    function notEmpty(string) {
+      return string.length > 0
+    }
+
+    songCycle.updateSongs = function(id, songs) {
+      var index = indexById[id]
+      songs = songs.map(trim).filter(notEmpty)
+      songSets[index] = songs
+    }
+
+    songCycle.addSongToCycle = function(id, song) {
+      var index = indexById[id]
+      songSets[index].push(song)
+    }
+
     songCycle.mapCycles = function(callback) {
       var values = []
       for(var i=0; i<names.length; i++) {
@@ -97,8 +116,18 @@ module.exports = library.export(
       return values}
 
     songCycle.expiresIn = function(cycleId, seconds) {
-      cycleDurations[cycleId] = seconds
-    }
+      cycleDurations[cycleId] = seconds}
+
+    songCycle.isComplete = function(iterationId) {
+      var iterationIndex = iterationIndexById[iterationId]
+      var cycleId = iterationCycleIds[iterationIndex]
+      var songs = songCycle.songsFromCycle(cycleId)
+
+      var isComplete = !songs.find(
+        function(song) {
+          return !songCycle.wasSongSungIn(iterationId, song)})
+
+      return isComplete}
 
     songCycle.getExpiredIteration = function() {
       var expiringIterationIds = Object.keys(iterationExpiresAt)
@@ -107,8 +136,6 @@ module.exports = library.export(
       var expiredIterationId = expiringIterationIds.find(
         function(iterationId) {
           var expiresAt = iterationExpiresAt[iterationId]
-          console.log("expires at", expiresAt)
-          debugger
           if (expiresAt && expiresAt < now) {
             return iterationId}})
 
@@ -118,7 +145,7 @@ module.exports = library.export(
     songCycle.wasSongSungIn = function(iterationId, song) {
       var iterationIndex = iterationIndexById[iterationId]
       var songsSung = iterationSongsSung[iterationIndex]
-      return contains(songsSung, song)}
+      return contains(songsSung, song.toLowerCase())}
 
     function contains(array, value) {
       if (!Array.isArray(array)) {
@@ -155,7 +182,7 @@ module.exports = library.export(
       iterationIds.push(iterationId)
       iterationNames.push(iterationName)
       iterationCycleIds.push(cycleId)
-      iterationSongsSung.push([firstSongSung])
+      iterationSongsSung.push([firstSongSung.toLowerCase()])
 
       iterationIndexById[iterationId] = iterationIndex
 
@@ -171,7 +198,7 @@ module.exports = library.export(
 
       return iterationId}
 
-    songCycle.close = function(iterationId, closedAt) {
+    songCycle.close = songCycle.complete = function(iterationId, closedAt) {
       delete iterationExpiresAt[iterationId]
       iterationClosedAt[iterationId] = closedAt
     }
@@ -182,7 +209,7 @@ module.exports = library.export(
     
     songCycle.sing = function(iterationId, song) {
       var index = iterationIndexById[iterationId]
-      iterationSongsSung[index].push(song)
+      iterationSongsSung[index].push(song.toLowerCase())
     }
 
     return songCycle})

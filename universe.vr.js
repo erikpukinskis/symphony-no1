@@ -8,15 +8,17 @@ module.exports = library.export(
   "bridge-module",
   "a-wild-universe-appeared",
   "./clock-tick.model",
-  "./song-cycle.model"],
-  function(lib, errorIf, element, bridgeModule, aWildUniverseAppeared, clockTick, songCycle) {
+  "./song-cycle.model",
+  "creature"],
+  function(lib, errorIf, element, bridgeModule, aWildUniverseAppeared, clockTick, songCycle, creature) {
 
     function bootUniverse(site) {
 
       var universe = aWildUniverseAppeared(
         "clock",{
         "clockTick": clockTick,
-        "songCycle": songCycle})
+        "songCycle": songCycle,
+        "creature": creature})
 
       universe.persistToS3({
         key: process.env.AWS_ACCESS_KEY_ID,
@@ -73,12 +75,17 @@ module.exports = library.export(
           lib,
           "song-cycle",
           bridge),
+        bridgeModule(
+          lib,
+          "creature",
+          bridge),
         universe.builder()],
-        function(aWildUniverseAppeared, clockTick, songCycle, baseLog) {
+        function(aWildUniverseAppeared, clockTick, songCycle, creature, baseLog) {
           var universe = aWildUniverseAppeared(
             "clock-ticks",{
             "clockTick": clockTick,
-            "songCycle": songCycle},
+            "songCycle": songCycle,
+            "creature": creature},
             baseLog)
 
           universe.reset = function() {
