@@ -82,7 +82,7 @@ library.using([
 
     var body = element.style(
       "body",{
-      "zoom": "2.2"})
+      "zoom": "1.2"})
 
     baseBridge.addToHead(
       element.stylesheet([
