@@ -14,6 +14,6 @@
     "web-site": "*"
   },
   "scripts": {
-    "start": "node node erik.vr"
+    "start": "node erik.vr"
   }
 }
