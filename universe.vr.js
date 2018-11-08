@@ -53,11 +53,12 @@ module.exports = library.export(
         ".nugget"))
 
     var statement = element.style(
-      ".statement",{
+      ".statement span",{
       "display": "inline-block",
-      "margin-left": "0.25em",
       "background": "black",
-      "color": "white"})
+      "color": "white",
+      "margin-bottom": "0.2em"
+    })
 
     function prepareBridge(bridge, universe) {
 
@@ -137,8 +138,9 @@ module.exports = library.export(
           function addToTimeline(functionCall, args, done) {
             var statement = element(
               ".statement",
-              element.raw(
-                functionCall))
+              element("span",
+                element.raw(
+                  functionCall)))
             addHtml.after(
               ".playhead",
               statement.html())
