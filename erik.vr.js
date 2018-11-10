@@ -148,7 +148,7 @@ library.using([
       {zoom: 0}],
       function zoom(settings, amount) {
         var newZoom = settings.zoom + amount
-        if (newZoom < 0 || newZoom > 3) {
+        if (newZoom < 0 || newZoom > 1) {
           return }
         document.body.classList.remove("zoom-"+settings.zoom)
         document.body.classList.add("zoom-"+newZoom)
