@@ -119,6 +119,7 @@ library.using([
           "line-height": "0.3",
         },
         " .song-button": {
+          "pointer-events": "none",
           "opacity": "0.5",
           "display": "inline",
           "color": "transparent",
