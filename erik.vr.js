@@ -82,6 +82,7 @@ library.using([
 
     var body = element.style(
       "body",{
+      "word-wrap": "break-word",
       "zoom": "1.2"})
 
     var panel = element.template.container(
@@ -99,6 +100,12 @@ library.using([
     var zoom1 = element.style(
       "body.zoom-1", {
         "zoom": "1",
+        "max-width": "500px",
+
+        " h1": {
+          "margin": "0.5em 0 0 0",
+          "font-size": "1em",
+        },
         " .song-cycle p": {
           "color": "transparent",
           "font-size": "6px",
@@ -162,21 +169,34 @@ library.using([
       function(request, response) {
         var bridge = baseBridge.forResponse(response)
 
-        var page = [
-          panel(zoomIn, zoomOut),
+        var page = element(
+          element.style({
+            "margin": "100px 5px"}),[
+          panel(
+            zoomIn,
+            zoomOut),
           universeVr.element(
             bridge,
             universe),
-          button,
           element(
             ".playhead",
             element.style({
-              "height": "0.5px",
-              "background-color": "#aa85f2",
-              "margin": "0.5em -0.25em"})),
+              "position": "absolute",
+              "left": "0px",
+              "width": "100%",
+              "height": "2px",
+              "background-color": "#00a1ff",
+              "border-bottom": "5px solid #e6ffff",
+              "margin-top": "25px"})),
+          element("div",
+            element.style({
+              "height": "30px"})),
           element(".clock"),
+          element("p", button),
           gem.pouch(),
-          songCycleVr(bridge)]
+          songCycleVr(
+            bridge),
+        ])
 
         bridge.send(
           page)})
