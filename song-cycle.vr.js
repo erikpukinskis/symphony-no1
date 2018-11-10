@@ -86,7 +86,7 @@ module.exports = library.export(
 
           var check = element(
             ".check-mark",
-            "&#10004;")
+            "&#10004;&#xFE0E;")
 
           var el = element(
             "button.song-button",
