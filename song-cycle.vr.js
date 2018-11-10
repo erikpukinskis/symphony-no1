@@ -188,7 +188,7 @@ module.exports = library.export(
             name+" cycle"),
           element(
             "p",
-            songs.join(
+            songs.map(songHtml).join(
               ", ")),
           element(
             "p",
@@ -197,6 +197,10 @@ module.exports = library.export(
             bulkEditButton),
           addSongForm])
       })
+
+    function songHtml(song) {
+      return element("span.song", song).html()
+    }
 
     var newCycleForm = element(
       "form.lil-page",{

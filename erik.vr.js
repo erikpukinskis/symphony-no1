@@ -84,8 +84,46 @@ library.using([
       "body",{
       "zoom": "1.2"})
 
+    var panel = element.template.container(
+      ".panel",
+      element.style({
+        "position": "fixed  ",
+        "right": "10px",
+        "top": "10px",
+        " button": {
+          "background": "transparent",
+          "color": "#0ad188",
+          "border": "2px solid #0ad188"}
+      }))
+
+    var zoom1 = element.style(
+      "body.zoom-1", {
+        "zoom": "1",
+        " .song-cycle p": {
+          "color": "transparent",
+          "font-size": "6px",
+        },
+        " .song-cycle p .song": {
+          "color": "transparent",
+          "line-height": "1.6",
+          "background": "#ccc",
+        },
+        " .song-set": {
+          "line-height": "0.3",
+        },
+        " .song-button": {
+          "opacity": "0.5",
+          "display": "inline",
+          "color": "transparent",
+          "font-size": "6px",
+          "padding": "0",
+          "margin-right": "0.5em",
+        },
+      })
     baseBridge.addToHead(
       element.stylesheet([
+        zoom1,
+        panel,
         body,
         gem]))
 
@@ -98,6 +136,26 @@ library.using([
         null,
         baseBridge))
 
+    var zoom = baseBridge.defineFunction([
+      {zoom: 0}],
+      function zoom(settings, amount) {
+        var newZoom = settings.zoom + amount
+        if (newZoom < 0 || newZoom > 3) {
+          return }
+        document.body.classList.remove("zoom-"+settings.zoom)
+        document.body.classList.add("zoom-"+newZoom)
+        settings.zoom = newZoom})
+
+    var zoomIn = element(
+      "button",{
+      "onclick": zoom.withArgs(-1).evalable()},
+      "zoom in")
+
+    var zoomOut = element(
+      "button",{
+      "onclick": zoom.withArgs(1).evalable()},
+      "zoom out")
+
     site.addRoute(
       "get",
       "/",
@@ -105,6 +163,7 @@ library.using([
         var bridge = baseBridge.forResponse(response)
 
         var page = [
+          panel(zoomIn, zoomOut),
           universeVr.element(
             bridge,
             universe),
