@@ -90,7 +90,7 @@ library.using([
       element.style({
         "position": "fixed",
         "z-index": "1",
-        "background": "rgba(255,255,255,0.01)",
+        "background": "rgba(255,255,255,0.2)",
         "right": "10px",
         "top": "10px",
         " button": {
