@@ -88,7 +88,9 @@ library.using([
     var panel = element.template.container(
       ".panel",
       element.style({
-        "position": "fixed  ",
+        "position": "fixed",
+        "z-index": "1",
+        "background": "rgba(255,255,255,0.01)",
         "right": "10px",
         "top": "10px",
         " button": {
@@ -183,6 +185,7 @@ library.using([
             ".playhead",
             element.style({
               "position": "absolute",
+              "z-index": "0",
               "left": "0px",
               "width": "100%",
               "height": "2px",

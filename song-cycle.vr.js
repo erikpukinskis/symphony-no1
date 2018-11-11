@@ -76,6 +76,10 @@ module.exports = library.export(
             "value": "Close iteration"}))
         ])
       })
+
+    var SYMBOLS = {
+      "CHECK": "&#10004;&#xFE0E;",
+      "X": "&#10008;&#xFE0E;"}
     
     var songSetTemplate = element.template(
       ".song-set",
@@ -86,7 +90,7 @@ module.exports = library.export(
 
           var check = element(
             ".check-mark",
-            "&#10004;&#xFE0E;")
+            SYMBOLS.CHECK)
 
           var el = element(
             "button.song-button",
@@ -115,10 +119,17 @@ module.exports = library.export(
           "form",{
           "method": "post",
           "action": "/iterations/"+iterationId+"/close"},
+          element.style({
+            "display": "inline"}),
           element(
             "input",{
             "type": "submit",
             "value": "Abort iteration"}))
+
+        var unelectButton = element(
+          "a.button",{
+          "href": "/iterations/"+iterationId+"/unelect"},
+          "Unelect songs")
 
         var celebrateButton = element(
           "button",{
@@ -139,7 +150,8 @@ module.exports = library.export(
 
           element(
             "p.actions",
-            isComplete ? celebrateButton : abortButton),
+            isComplete ? celebrateButton : abortButton,
+            unelectButton),
         ])
       })  
 
@@ -238,6 +250,48 @@ module.exports = library.export(
           "value": "Create cycle"})),
       ])
 
+    var unelectForm = element.template(
+      "form.lil-page",{
+      "method": "post"},
+      function(iterationId, songs) {
+
+        this.addAttribute("action", "/iterations/"+iterationId+"/unelected-songs")
+        
+        var form = this
+
+        songs.forEach(function(song) {
+          var button = element(
+            "input",{
+            "type": "checkbox",
+            "name": "unelectedSongs",
+            "value": song.toLowerCase()},
+            element.style({
+              "display": "none"}))
+
+          if (!songCycle.isElected(iterationId, song)) {
+            button.addAttribute("checked", "true")
+          }
+          var label = element(
+            "label.button.song-button",{
+            "for": button.assignId()},
+            element(
+              ".check-box",
+              element.style({
+                "display": "none"}),
+              SYMBOLS.X),
+            song)
+
+          form.addChild(button)
+          form.addChild(label)
+        })
+
+        this.addChild(
+          element("p", element(
+            "input",{
+            "type": "submit",
+            "value": "Save"})))
+      })
+
     var bulkEditSongsForm = element.template(
       "form.lil-page",{
       "method": "post"},
@@ -305,7 +359,7 @@ module.exports = library.export(
               ".check-mark.open-iteration-check",
               element.style({
                 "display": "none"}),
-              "&#10004;"),
+              SYMBOLS.CHECK),
             "Opening ceremony performed"),
           element("p", "And then choose an easy task to get some momentum:"),
           songs.map(songButton),
@@ -320,8 +374,18 @@ module.exports = library.export(
       startCycleStyle,
 
       element.style(
-        "a.button, button",{
+        ".button, button, input[type=submit]",{
           "margin-right": "0.25em"}),
+
+      element.style(
+        ":checked + label.song-button",{
+          "background": "#accec1",
+        }),
+
+      element.style(
+        ":checked + label.song-button .check-box",{
+        "display": "inline-block !important",
+        "margin-right": "0.25em"}),
 
       element.style(
         ".song-button",{
@@ -486,7 +550,33 @@ module.exports = library.export(
 
           response.redirect("/")
         })
+
+      site.addRoute(
+        "get",
+        "/iterations/:iterationId/unelect",
+        function(request, response) {
+          var iterationId = request.params.iterationId
+          var bridge = baseBridge.forResponse(response)
+          var cycleId = songCycle.cycleIdForIteration(iterationId)
+          var songs = songCycle.songsFromCycle(cycleId)
+
+          bridge.send(
+            unelectForm(
+              iterationId,
+              songs))})
   
+      site.addRoute(
+        "post",
+        "/iterations/:iterationId/unelected-songs",
+        function(request, response) {
+          var iterationId = request.params.iterationId
+          var unelected = request.body.unelectedSongs
+          songCycle.unelectSongs(iterationId, unelected)
+          universe.do("songCycle.unelectSongs", iterationId, unelected)
+
+          response.redirect("/")
+        })
+
       site.addRoute(
         "get",
         "/cycles/:id/bulk-edit",

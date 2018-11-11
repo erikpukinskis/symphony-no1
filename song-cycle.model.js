@@ -19,21 +19,24 @@ module.exports = library.export(
     var iterationSongsSung
     var iterationIndexById
     var iterationClosedAt
+    var iterationSongsUnelected
 
     songCycle.reset = function () {
       cycleDurations = {}
       iterationExpiresAt = {}
       iterationClosedAt = {}
 
+      indexById = {}
       names = []
       songSets = []
       ids = []
-      indexById = {}
+
+      iterationIndexById = {}
       iterationIds = []
       iterationNames = []
       iterationCycleIds = []
-      iterationIndexById = {}
       iterationSongsSung = []
+      iterationSongsUnelected = {}
     }
 
     songCycle.reset()
@@ -147,20 +150,6 @@ module.exports = library.export(
       var songsSung = iterationSongsSung[iterationIndex]
       return contains(songsSung, song.toLowerCase())}
 
-    function contains(array, value) {
-      if (!Array.isArray(array)) {
-        throw new Error("looking for "+JSON.stringify(value)+" in "+JSON.stringify(array)+", which is supposed to be an array. But it's not.")
-      }
-      var index = -1;
-      var length = array.length;
-      while (++index < length) {
-        if (array[index] == value) {
-          return true;
-        }
-      }
-      return false;
-    }
-
     songCycle.songsFromCycle = function(cycleId) {
       var i = indexById[cycleId]
       return songSets[i]}
@@ -170,7 +159,18 @@ module.exports = library.export(
       identifiable.valid("iter", iterationId)
       var index = iterationIndexById[iterationId]
       var cycleId = iterationCycleIds[index]
-      return songCycle.songsFromCycle(cycleId)
+      var cycleSongs = songCycle.songsFromCycle(cycleId)
+      var unelected = iterationSongsUnelected[iterationId]
+      if (!unelected) {
+        return cycleSongs
+      } else {
+        return without(cycleSongs, unelected)
+      }
+    }
+
+    songCycle.cycleIdForIteration = function(iterationId) {
+      var index = iterationIndexById[iterationId]
+      return iterationCycleIds[index]
     }
 
     songCycle.open = function(iterationId, cycleId, iterationName, firstSongSung, expiresAt) {
@@ -210,6 +210,58 @@ module.exports = library.export(
     songCycle.sing = function(iterationId, song) {
       var index = iterationIndexById[iterationId]
       iterationSongsSung[index].push(song.toLowerCase())
+    }
+
+    songCycle.unelectSongs = function(iterationId, unelected) {
+      iterationSongsUnelected[iterationId] = unelected
+    }
+
+    songCycle.isElected = function(iterationId, song) {
+      var unelected = iterationSongsUnelected[iterationId]
+
+      if (!unelected) {
+        return true
+      } else {
+        return !contains(unelected, song.toLowerCase())
+      }
+      return !contains()
+    }
+
+    function without(a,b) {
+      return a.filter(
+        function(item) {
+          if (contains(b, item.toLowerCase())) {
+            console.log("unelected", item)
+            return false
+          } else {
+            return true}})}
+
+    function contains(array, value) {
+      if (!Array.isArray(array)) {
+        throw new Error("looking for "+JSON.stringify(value)+" in "+JSON.stringify(array)+", which is supposed to be an array. But it's not.")
+      }
+      var index = -1;
+      var length = array.length;
+      while (++index < length) {
+        if (array[index] == value) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function contains(array, value) {
+      if (!Array.isArray(array)) {
+        throw new Error("looking for "+JSON.stringify(value)+" in "+JSON.stringify(array)+", which is supposed to be an array. But it's not.")
+      }
+      var index = -1;
+      var length = array.length;
+      while (++index < length) {
+        if (array[index] == value) {
+          return true;
+        }
+      }
+      return false;
     }
 
     return songCycle})

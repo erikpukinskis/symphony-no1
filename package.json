@@ -4,7 +4,7 @@
     "add-html": "^0.28.0",
     "basic-styles": "^0.37.0",
     "bridge-module": "^0.37.0",
-    "browser-bridge": "^0.142.0",
+    "browser-bridge": "^0.148.0",
     "creature": "*",
     "error-if": "*",
     "identifiable": "^0.15.0",
