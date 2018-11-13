@@ -93,46 +93,87 @@ library.using([
         "background": "rgba(255,255,255,0.2)",
         "right": "10px",
         "top": "10px",
+        "display": "flex",
         " button": {
           "background": "transparent",
           "color": "#0ad188",
           "border": "2px solid #0ad188"}
       }))
 
-    var zoom1 = element.style(
-      "body.zoom-1", {
-        "zoom": "1",
-        "max-width": "500px",
+    var zoom2 = element.style(
+      "body.zoom-2", {
+      "zoom": "0.9",
+      "margin-top": "-24px",
 
-        " h1": {
-          "margin": "0.5em 0 0 0",
-          "font-size": "1em",
-        },
-        " .song-cycle p": {
-          "color": "transparent",
-          "font-size": "6px",
-        },
-        " .song-cycle p .song": {
-          "color": "transparent",
-          "line-height": "1.6",
-          "background": "#ccc",
-        },
-        " .song-set": {
-          "line-height": "0.3",
-        },
-        " .song-button": {
-          "pointer-events": "none",
-          "opacity": "0.5",
-          "display": "inline",
-          "color": "transparent",
-          "font-size": "6px",
-          "padding": "0",
-          "margin-right": "0.5em",
-        },
-      })
+      " .column": {
+        "width": "300px",
+        "max-width": "45%"},
+
+      " .column button, .column .button, .column input[type=submit]": {
+        "overflow": "hidden",
+        "vertical-align": "middle",
+        "color": "transparent",
+        "width": "20px",
+        "height": "10px",
+        "padding": "0",
+        "background": "#95e8ca"},
+
+      " p": {
+        "margin": "0",
+      },
+
+      " .panel button": {
+        "display": "block",},
+
+      " .column-title": {
+        "font-size": "4em",
+        "display": "block",
+        "color": "black"},
+    })
+
+    var column = element.style(
+      ".column", {
+        " .column-title": {
+          "display": "none"}})
+
+    var zoom1 = element.style(
+      "body.zoom-1, body.zoom-2", {
+      "zoom": "1",
+      "margin-top": "20px",
+
+      " .column": {
+        "max-width": "500px"},
+
+      " h1": {
+        "margin": "0.5em 0 0 0",
+        "font-size": "1em"},
+
+      " .song-cycle p": {
+        "color": "transparent",
+        "font-size": "6px"},
+
+      " .song-cycle p .song": {
+        "color": "transparent",
+        "line-height": "1.6",
+        "background": "#ccc"},
+
+      " .song-set": {
+        "line-height": "0.3"},
+
+      " .song-button": {
+        "pointer-events": "none",
+        "opacity": "0.5",
+        "display": "inline",
+        "color": "transparent",
+        "font-size": "6px",
+        "padding": "0",
+        "margin-right": "0.5em"},
+    })
     baseBridge.addToHead(
       element.stylesheet([
         zoom1,
+        zoom2,
+        column,
         panel,
         body,
         gem]))
@@ -150,7 +191,7 @@ library.using([
       {zoom: 0}],
       function zoom(settings, amount) {
         var newZoom = settings.zoom + amount
-        if (newZoom < 0 || newZoom > 1) {
+        if (newZoom < 0 || newZoom > 2) {
           return }
         document.body.classList.remove("zoom-"+settings.zoom)
         document.body.classList.add("zoom-"+newZoom)
@@ -172,12 +213,9 @@ library.using([
       function(request, response) {
         var bridge = baseBridge.forResponse(response)
 
-        var page = element(
-          element.style({
-            "margin": "100px 5px"}),[
-          panel(
-            zoomIn,
-            zoomOut),
+        var column1 = element(
+          ".column",[
+          element(".column-title", "Universe"),
           universeVr.element(
             bridge,
             universe),
@@ -201,6 +239,13 @@ library.using([
           songCycleVr(
             bridge),
         ])
+
+        var page = [
+          panel(
+            zoomIn,
+            zoomOut),
+          column1
+        ]
 
         bridge.send(
           page)})

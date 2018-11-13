@@ -10,7 +10,7 @@
     "identifiable": "^0.15.0",
     "make-request": "*",
     "module-library": "*",
-    "web-element": "*",
+    "web-element": "^0.105.0",
     "web-site": "*"
   },
   "scripts": {
