@@ -160,7 +160,7 @@ library.using([
           "font-size": "6px",
           "padding": "0",
           "margin-bottom": "2px",
-          "background": "#95e8ca",
+          "opacity": "0.5",
           "pointer-events": "none"},
 
         " p": {
@@ -218,7 +218,8 @@ library.using([
         " .column": {
           "display": "inline-block",
           "vertical-align": "top",
-          "float": "left"},
+          "float": "left",
+          "width": "100%"},
 
         " .column:nth-child(1)": {
           "margin-left": "-100%"},
@@ -298,7 +299,7 @@ library.using([
 
         socket.listen(somethingWasSaid.bind(null, meId, socket.id))
 
-        var chats = creature.everythingSaid().reverse().map(
+        var chats = creature.everythingSaid().map(
           function(text) {
             return element(".speech", text).html()+"<br/>"
           })
