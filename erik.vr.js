@@ -138,7 +138,9 @@ library.using([
           "color": "transparent",
           "font-size": "6px",
           "padding": "0",
-          "background": "#95e8ca"},
+          "margin-bottom": "2px",
+          "background": "#95e8ca",
+          "pointer-events": "none"},
 
         " p": {
           "margin": "0",
@@ -312,7 +314,7 @@ library.using([
           element(
             ".convo",
             element.style({
-              "margin-top": "30px"}),
+              "margin-top": "50px"}),
             chats),
         ])
 
