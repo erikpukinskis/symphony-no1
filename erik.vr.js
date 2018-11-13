@@ -103,11 +103,17 @@ library.using([
     var zoom2 = element.style(
       "body.zoom-2", {
       "zoom": "0.9",
-      "margin-top": "-24px",
+      "margin-top": "-12px",
+
+      " .panel": {
+        "top": "50px",
+      },
 
       " .column": {
-        "width": "300px",
-        "max-width": "45%"},
+        "width": "50%"},
+
+      " .column:nth-child(1)": {
+        "margin-left": "0"},
 
       " .column button, .column .button, .column input[type=submit]": {
         "overflow": "hidden",
@@ -126,20 +132,19 @@ library.using([
         "display": "block",},
 
       " .column-title": {
-        "font-size": "4em",
+        "font-size": "3em",
         "display": "block",
         "color": "black"},
     })
-
-    var column = element.style(
-      ".column", {
-        " .column-title": {
-          "display": "none"}})
 
     var zoom1 = element.style(
       "body.zoom-1, body.zoom-2", {
       "zoom": "1",
       "margin-top": "20px",
+
+      " .panel": {
+        "top": "20px",
+      },
 
       " .column": {
         "max-width": "500px"},
@@ -169,6 +174,23 @@ library.using([
         "padding": "0",
         "margin-right": "0.5em"},
     })
+
+    var column = element.style(
+      ".columns", {
+
+      " .column": {
+        "display": "inline-block",
+        "vertical-align": "top",
+        "float": "left"},
+
+      " .column:nth-child(1)": {
+        "margin-left": "-100%"},
+
+      " .column-title": {
+        "white-space": "nowrap",
+        "display": "none"},
+    })
+
     baseBridge.addToHead(
       element.stylesheet([
         zoom1,
@@ -213,6 +235,31 @@ library.using([
       function(request, response) {
         var bridge = baseBridge.forResponse(response)
 
+        var column2 = element(
+          ".column",[
+          element(".column-title", "Hi Kynthia"),
+          element(
+            element.style({
+              "display": "inline-block",
+              "width": "60%",
+              "box-sizing": "border-box",
+              "margin": "0",
+            }),
+            "input",{
+            "type": "text",
+            "placeholder": "type here"}),
+          element(
+            element.style({
+              "display": "inline-block",
+              "box-sizing": "border-box",
+              "width": "40%",
+              "margin": "0",
+            }),
+            "input",{
+            "type": "submit",
+            "value": "Talk"}),
+        ])
+
         var column1 = element(
           ".column",[
           element(".column-title", "Universe"),
@@ -244,7 +291,10 @@ library.using([
           panel(
             zoomIn,
             zoomOut),
-          column1
+          element(
+            ".columns",
+            column2,
+            column1),
         ]
 
         bridge.send(
