@@ -25,8 +25,9 @@ library.using([
   "a-wild-universe-appeared",
   "./gem.vr",
   "./universe.vr",
-  "./song-cycle.vr"],
-  function (lib, WebSite, BrowserBridge, element, basicStyles, makeRequest, bridgeModule, clockTick, aWildUniverseAppeared, gem, universeVr, songCycleVr) {
+  "./song-cycle.vr",
+  "creature"],
+  function (lib, WebSite, BrowserBridge, element, basicStyles, makeRequest, bridgeModule, clockTick, aWildUniverseAppeared, gem, universeVr, songCycleVr, creature) {
     var site = new WebSite()
     var baseBridge = new BrowserBridge()
     
@@ -80,11 +81,6 @@ library.using([
       "Press me",{
       "onclick": nextTick.evalable()})
 
-    var body = element.style(
-      "body",{
-      "word-wrap": "break-word",
-      "zoom": "1.2"})
-
     var panel = element.template.container(
       ".panel",
       element.style({
@@ -100,105 +96,120 @@ library.using([
           "border": "2px solid #0ad188"}
       }))
 
-    var zoom2 = element.style(
-      "body.zoom-2", {
-      "zoom": "0.9",
-      "margin-top": "-12px",
+    var stylesheet = element.stylesheet([
+      panel,
+      gem,
+      element.style(
+        ".speech",{
+        "background": "#f8f8f8",
+        "margin-bottom": "5px",
+        "border-radius": "8px",
+        "background": "#fafafa",
+        "padding": "5px 10px",
+        "max-width": "75%",
+        "display": "inline-block"}),
 
-      " .panel": {
-        "top": "50px",
-      },
+      element.style(
+        ".column",{
+        "word-wrap": "break-word",
+        "zoom": "1.4"}),
 
-      " .column": {
-        "width": "50%"},
+      element.style(
+        "body.zoom-2 .column", {
+        "margin-top": "-12px",
+        "zoom": "1.0",
+        "width": "50%",
 
-      " .column:nth-child(1)": {
-        "margin-left": "0"},
+        ":nth-child(1)": {
+          "margin-left": "0"},
 
-      " .column button, .column .button, .column input[type=submit]": {
-        "overflow": "hidden",
-        "vertical-align": "middle",
-        "color": "transparent",
-        "width": "20px",
-        "height": "10px",
-        "padding": "0",
-        "background": "#95e8ca"},
+        " .column-title": {
+          "font-size": "3em",
+          "display": "block",
+          "color": "black"},
+      }),
 
-      " p": {
-        "margin": "0",
-      },
+      element.style(
+        "body.zoom-2 .column.zoomable", {
 
-      " .panel button": {
-        "display": "block",},
+        " button, .button, input[type=submit]": {
+          "overflow": "hidden",
+          "vertical-align": "middle",
+          "color": "transparent",
+          "width": "20px",
+          "height": "10px",
+          "padding": "0",
+          "background": "#95e8ca"},
 
-      " .column-title": {
-        "font-size": "3em",
-        "display": "block",
-        "color": "black"},
-    })
+        " p": {
+          "margin": "0",
+        },
 
-    var zoom1 = element.style(
-      "body.zoom-1, body.zoom-2", {
-      "zoom": "1",
-      "margin-top": "20px",
+      }),
 
-      " .panel": {
-        "top": "20px",
-      },
+      element.style(
+        "body.zoom-1 .column, body.zoom-2 .column", {
+        "zoom": "1.2",
+        "margin-top": "20px"}),
 
-      " .column": {
-        "max-width": "500px"},
+      element.style(
+        "body.zoom-1 .column.zoomable, body.zoom-2 .column.zoomable", {
 
-      " h1": {
-        "margin": "0.5em 0 0 0",
-        "font-size": "1em"},
+        " .panel button": {
+          "display": "block",},
 
-      " .song-cycle p": {
-        "color": "transparent",
-        "font-size": "6px"},
+        " .column": {
+          "max-width": "500px"},
 
-      " .song-cycle p .song": {
-        "color": "transparent",
-        "line-height": "1.6",
-        "background": "#ccc"},
+        " h1": {
+          "margin": "0.5em 0 0 0",
+          "font-size": "1em"},
 
-      " .song-set": {
-        "line-height": "0.3"},
+        " .song-cycle p": {
+          "color": "transparent",
+          "font-size": "6px"},
 
-      " .song-button": {
-        "pointer-events": "none",
-        "opacity": "0.5",
-        "display": "inline",
-        "color": "transparent",
-        "font-size": "6px",
-        "padding": "0",
-        "margin-right": "0.5em"},
-    })
+        " .song-cycle p .song": {
+          "color": "transparent",
+          "line-height": "1.6",
+          "background": "#ccc"},
 
-    var column = element.style(
-      ".columns", {
+        " .song-set": {
+          "line-height": "0.3"},
 
-      " .column": {
-        "display": "inline-block",
-        "vertical-align": "top",
-        "float": "left"},
+        " .song-button": {
+          "pointer-events": "none",
+          "opacity": "0.5",
+          "display": "inline",
+          "color": "transparent",
+          "font-size": "6px",
+          "padding": "0",
+          "margin-right": "0.5em"},
+      }),
 
-      " .column:nth-child(1)": {
-        "margin-left": "-100%"},
+      element.style(
+        "zoom-1 .panel, zoom-2 .panel",{
+        "top": "20px"}),
 
-      " .column-title": {
-        "white-space": "nowrap",
-        "display": "none"},
-    })
+      element.style(
+        ".columns",{
+        " .column": {
+          "display": "inline-block",
+          "vertical-align": "top",
+          "float": "left"},
 
-    baseBridge.addToHead(
-      element.stylesheet([
-        zoom1,
-        zoom2,
-        column,
-        panel,
-        body,
-        gem]))
+        " .column:nth-child(1)": {
+          "margin-left": "-100%"},
+
+        " .column-title": {
+          "white-space": "nowrap",
+          "display": "none"},
+      }),
+    ])
+
+
+
+    baseBridge.addToHead(stylesheet)
 
     gem.prepareSite(site, universe)
 
@@ -230,14 +241,54 @@ library.using([
       "zoom out")
 
     site.addRoute(
+      "post",
+      "/say",
+      function(request, response) {
+        var meId = request.cookies.meId
+        if (!meId) {
+          meId = creature(null, "anonymous")
+          universe.do("creature", meId, "anonymous")
+          response.cookie(
+            "meId",
+            meId,{
+            maxAge: 10*years})
+        }
+        var text = request.body.text
+        creature.say(meId, text)
+        universe.do("creature.say", text)
+        response.json({
+          "ok": true})})
+
+    site.addRoute(
       "get",
       "/",
       function(request, response) {
         var bridge = baseBridge.forResponse(response)
 
+        var talk = bridge.defineFunction([
+          bridgeModule(lib, "add-html", bridge),
+          bridgeModule(lib, "make-request", bridge)],
+          function(addHtml, makeRequest,event) {
+            event.preventDefault()
+            form = event.target
+            var input = form.querySelector("[name=text]")
+            var text = input.value
+            addHtml.firstIn(".convo", "<div class=\"speech\">"+text+"</div><br/>")
+            makeRequest({
+              "method": "post",
+              "path": "/say/",
+              "data": {text: text}})
+            input.value = ""
+          })
+
         var column2 = element(
-          ".column",[
-          element(".column-title", "Hi Kynthia"),
+          "form.column",{
+          "onsubmit": talk.withArgs(bridge.event).evalable()},[
+
+          element(
+            ".column-title",
+            "Hi Kynthia"),
+
           element(
             element.style({
               "display": "inline-block",
@@ -247,21 +298,28 @@ library.using([
             }),
             "input",{
             "type": "text",
+            "name": "text",
             "placeholder": "type here"}),
+
           element(
             element.style({
               "display": "inline-block",
               "box-sizing": "border-box",
-              "width": "40%",
+              "width": "30%",
               "margin": "0",
             }),
             "input",{
             "type": "submit",
             "value": "Talk"}),
+
+          element(
+            ".convo",
+            element.style({
+              "margin-top": "30px"})),
         ])
 
         var column1 = element(
-          ".column",[
+          ".column.zoomable",[
           element(".column-title", "Universe"),
           universeVr.element(
             bridge,
