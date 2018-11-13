@@ -39,11 +39,6 @@ module.exports = library.export(
         this.onclick(grabBinding.withArgs(this.assignId()).evalable())
       })
 
-    var minutes = 60
-    var hours = 60*minutes
-    var days = 24*hours
-    var years = 365*days
-
     gem.prepareSite = function(site, universe) {
       if (site.remember("gem")) {
         return }
@@ -53,15 +48,7 @@ module.exports = library.export(
         "/gems/grabbed",
         function(request, response) {
 
-          var meId = request.cookies.meId
-          if (!meId) {
-            meId = creature(null, "anonymous")
-            universe.do("creature", meId, "anonymous")
-            response.cookie(
-              "meId",
-              meId,{
-              maxAge: 10*years})
-          }
+          var meId = creature.ensureOn(request, response, universe)
 
           var gemCount = creature.remember(meId, "gemCount") || 0
 

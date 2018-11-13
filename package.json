@@ -5,7 +5,7 @@
     "basic-styles": "^0.37.0",
     "bridge-module": "^0.37.0",
     "browser-bridge": "^0.148.0",
-    "creature": "*",
+    "creature": "^0.6.0",
     "error-if": "*",
     "identifiable": "^0.15.0",
     "make-request": "*",

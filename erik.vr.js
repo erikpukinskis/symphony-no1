@@ -244,18 +244,11 @@ library.using([
       "post",
       "/say",
       function(request, response) {
-        var meId = request.cookies.meId
-        if (!meId) {
-          meId = creature(null, "anonymous")
-          universe.do("creature", meId, "anonymous")
-          response.cookie(
-            "meId",
-            meId,{
-            maxAge: 10*years})
-        }
+        var meId = creature.ensureOn(request, response, universe)
         var text = request.body.text
         creature.say(meId, text)
-        universe.do("creature.say", text)
+        universe.do("creature.say", meId, text)
+        console.log("SENDING RESPONSE")
         response.json({
           "ok": true})})
 
@@ -276,9 +269,14 @@ library.using([
             addHtml.firstIn(".convo", "<div class=\"speech\">"+text+"</div><br/>")
             makeRequest({
               "method": "post",
-              "path": "/say/",
+              "path": "/say",
               "data": {text: text}})
             input.value = ""
+          })
+
+        var chats = creature.everythingSaid().map(
+          function(text) {
+            return element(".speech", text).html()+"<br/>"
           })
 
         var column2 = element(
@@ -315,7 +313,8 @@ library.using([
           element(
             ".convo",
             element.style({
-              "margin-top": "30px"})),
+              "margin-top": "30px"}),
+            chats),
         ])
 
         var column1 = element(
