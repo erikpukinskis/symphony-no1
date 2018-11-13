@@ -253,9 +253,19 @@ module.exports = library.export(
     var unelectForm = element.template(
       "form.lil-page",{
       "method": "post"},
-      function(iterationId, songs) {
+      function(iterationId, songs, iterationName, cycleName) {
 
         this.addAttribute("action", "/iterations/"+iterationId+"/unelected-songs")
+
+        this.addChildren([
+          element(
+            "h1",
+            "Unelect songs from "+iterationName),
+          element(
+            "p",
+            "An iteration of "+cycleName)
+        ])
+
         
         var form = this
 
@@ -559,11 +569,15 @@ module.exports = library.export(
           var bridge = baseBridge.forResponse(response)
           var cycleId = songCycle.cycleIdForIteration(iterationId)
           var songs = songCycle.songsFromCycle(cycleId)
-
+          var iterationName = songCycle.getIterationName(iterationId)
+          var cycleName = songCycle.getName(cycleId)
+          
           bridge.send(
             unelectForm(
               iterationId,
-              songs))})
+              songs,
+              iterationName,
+              cycleName))})
   
       site.addRoute(
         "post",
