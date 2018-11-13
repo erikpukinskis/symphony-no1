@@ -26,9 +26,11 @@ library.using([
   "./gem.vr",
   "./universe.vr",
   "./song-cycle.vr",
-  "creature"],
-  function (lib, WebSite, BrowserBridge, element, basicStyles, makeRequest, bridgeModule, clockTick, aWildUniverseAppeared, gem, universeVr, songCycleVr, creature) {
+  "creature",
+  "single-use-socket"],
+  function (lib, WebSite, BrowserBridge, element, basicStyles, makeRequest, bridgeModule, clockTick, aWildUniverseAppeared, gem, universeVr, songCycleVr, creature, SingleUseSocket) {
     var site = new WebSite()
+    SingleUseSocket.installOn(site) 
     var baseBridge = new BrowserBridge()
     
     basicStyles.addTo(baseBridge)
@@ -36,6 +38,25 @@ library.using([
     var universe = universeVr(site)
 
     var grabGem = gem.defineGrabOn(baseBridge)
+
+    var addToConvo = baseBridge.defineFunction([
+      bridgeModule(lib, "add-html", baseBridge)],
+      function(addHtml, text) {
+        addHtml.firstIn(".convo", "<div class=\"speech\">"+text+"</div><br>")
+      })
+
+    var talk = baseBridge.defineFunction([
+      addToConvo,
+      bridgeModule(lib, "make-request", baseBridge)],
+      function(addToConvo, makeRequest, send, event) {
+        event.preventDefault()
+        form = event.target
+        var input = form.querySelector("[name=text]")
+        var text = input.value
+        addToConvo(text)
+        send(text)
+        input.value = ""
+      })
 
     var nextTick = baseBridge.defineFunction([
       makeRequest.defineOn(baseBridge),
@@ -241,48 +262,54 @@ library.using([
       "onclick": zoom.withArgs(1).evalable()},
       "zoom out")
 
-    site.addRoute(
-      "post",
-      "/say",
-      function(request, response) {
-        var meId = creature.ensureOn(request, response, universe)
-        var text = request.body.text
-        creature.say(meId, text)
-        universe.do("creature.say", meId, text)
-        console.log("SENDING RESPONSE")
-        response.json({
-          "ok": true})})
+
+    var waitingSockets = {}
+
+    function somethingWasSaid(meId, mySocketId, text) {
+      console.log("something was said:", text)
+      creature.say(meId, text)
+      universe.do("creature.say", meId, text)
+      debugger
+      Object.keys(waitingSockets).forEach(function(socketId) {
+        if (socketId == mySocketId) {
+          return
+        }
+        waitingSockets[socketId].send(text)
+      })
+    }
+
+    function removeSocket(socketId) {
+      waitingSockets[socketId] = null
+    }
 
     site.addRoute(
       "get",
       "/",
       function(request, response) {
         var bridge = baseBridge.forResponse(response)
+        var meId = creature.ensureOn(request, response, universe)
+        var socket = new SingleUseSocket(site)
+        waitingSockets[socket.id] = socket
 
-        var talk = bridge.defineFunction([
-          bridgeModule(lib, "add-html", bridge),
-          bridgeModule(lib, "make-request", bridge)],
-          function(addHtml, makeRequest,event) {
-            event.preventDefault()
-            form = event.target
-            var input = form.querySelector("[name=text]")
-            var text = input.value
-            addHtml.firstIn(".convo", "<div class=\"speech\">"+text+"</div><br/>")
-            makeRequest({
-              "method": "post",
-              "path": "/say",
-              "data": {text: text}})
-            input.value = ""
-          })
+        bridge.asap(
+          socket.defineListenOn(bridge).withArgs(addToConvo))
 
-        var chats = creature.everythingSaid().map(
+        socket.onClose(removeSocket.bind(null, socket.id))
+
+        socket.listen(somethingWasSaid.bind(null, meId, socket.id))
+
+        var chats = creature.everythingSaid().reverse().map(
           function(text) {
             return element(".speech", text).html()+"<br/>"
           })
 
+        var sendMessage = talk.withArgs(
+          socket.defineSendOn(bridge),
+          bridge.event)
+
         var column2 = element(
           "form.column",{
-          "onsubmit": talk.withArgs(bridge.event).evalable()},[
+          "onsubmit": sendMessage.evalable()},[
 
           element(
             ".column-title",

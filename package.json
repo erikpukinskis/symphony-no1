@@ -10,6 +10,7 @@
     "identifiable": "^0.15.0",
     "make-request": "*",
     "module-library": "*",
+    "single-use-socket": "^0.25.0",
     "web-element": "^0.105.0",
     "web-site": "*"
   },
