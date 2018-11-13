@@ -136,8 +136,7 @@ library.using([
           "overflow": "hidden",
           "vertical-align": "middle",
           "color": "transparent",
-          "width": "20px",
-          "height": "10px",
+          "font-size": "6px",
           "padding": "0",
           "background": "#95e8ca"},
 
