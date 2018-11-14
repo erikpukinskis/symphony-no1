@@ -53,8 +53,19 @@ module.exports = library.export(
           calls.addSongForInstance,
           calls.celebrateIteration))
 
-      return [button].concat(instances, cycles)}
+      var elements = [button]
 
+      if (instances.length > 0) {
+        elements.push(element("h1", "OPEN INSTANCES OF CYCLES"))
+        elements.push(instances)
+      }
+
+      if (cycles.length > 0) {
+        elements.push(element("h1", "ARCHIVED CYCLES"))
+        elements.push(cycles)
+      }
+
+      return elements}
 
 
     // Iteration templates
@@ -384,6 +395,11 @@ module.exports = library.export(
       startCycleStyle,
 
       element.style(
+        ".song-cycle, .song-cycle-iteration",{
+        "border-left": "3px solid blue",
+        "padding-left": "10px"}),
+
+      element.style(
         ".button, button, input[type=submit]",{
           "margin-right": "0.25em"}),
 
@@ -571,7 +587,7 @@ module.exports = library.export(
           var songs = songCycle.songsFromCycle(cycleId)
           var iterationName = songCycle.getIterationName(iterationId)
           var cycleName = songCycle.getName(cycleId)
-          
+
           bridge.send(
             unelectForm(
               iterationId,
