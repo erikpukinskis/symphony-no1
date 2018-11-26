@@ -122,11 +122,26 @@ library.using([
       gem,
       element.style(
         ".speech",{
+
+        "::before": {
+          "display": "block",
+          "content": "\" \"",
+          "position": "relative",
+          "z-index": "-1",
+          "background": "#fafafa",
+          "width": "15px",
+          "left": "0%",
+          "height": "15px",
+          "top": "-10px",
+          "margin-bottom": "-15px",
+          "transform": "rotate(45deg)",
+        },
+
         "background": "#f8f8f8",
-        "margin-bottom": "5px",
+        "margin-bottom": "15px",
         "border-radius": "8px",
         "background": "#fafafa",
-        "padding": "5px 10px",
+        "padding": "5px 8px",
         "max-width": "75%",
         "display": "inline-block"}),
 
@@ -145,9 +160,7 @@ library.using([
           "margin-left": "0"},
 
         " .column-title": {
-          "font-size": "3em",
-          "display": "block",
-          "color": "black"},
+          "display": "block"},
       }),
 
       element.style(
@@ -270,12 +283,17 @@ library.using([
       console.log("something was said:", text)
       creature.say(meId, text)
       universe.do("creature.say", meId, text)
-      debugger
+
       Object.keys(waitingSockets).forEach(function(socketId) {
         if (socketId == mySocketId) {
           return
         }
-        waitingSockets[socketId].send(text)
+        var socket = waitingSockets[socketId]
+        if (!socket) {
+          debugger
+        }
+        console.log("writing to socket "+socket.id)
+        socket.send(text)
       })
     }
 
@@ -290,6 +308,7 @@ library.using([
         var bridge = baseBridge.forResponse(response)
         var meId = creature.ensureOn(request, response, universe)
         var socket = new SingleUseSocket(site)
+        console.log("setting socket "+socket.id)
         waitingSockets[socket.id] = socket
 
         bridge.asap(
@@ -313,7 +332,7 @@ library.using([
           "onsubmit": sendMessage.evalable()},[
 
           element(
-            ".column-title",
+            "h2.column-title",
             "Hi Kynthia"),
 
           element(
@@ -348,7 +367,7 @@ library.using([
 
         var column1 = element(
           ".column.zoomable",[
-          element(".column-title", "Universe"),
+          element("h2.column-title", "Universe"),
           universeVr.element(
             bridge,
             universe),

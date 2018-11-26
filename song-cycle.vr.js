@@ -61,7 +61,7 @@ module.exports = library.export(
       }
 
       if (cycles.length > 0) {
-        elements.push(element("h1", "ARCHIVED CYCLES"))
+        elements.push(element("h2", "Old cycles"))
         elements.push(cycles)
       }
 
@@ -395,9 +395,7 @@ module.exports = library.export(
       startCycleStyle,
 
       element.style(
-        ".song-cycle, .song-cycle-iteration",{
-        "border-left": "3px solid blue",
-        "padding-left": "10px"}),
+        ".song-cycle, .song-cycle-iteration"),
 
       element.style(
         ".button, button, input[type=submit]",{
